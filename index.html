@@ -2526,17 +2526,17 @@ function App() {
               let bg = '#fff', border = '#F0E6F5';
               if (showResult && idx === q.correct) { bg = '#E8F8E8'; border = '#7BC67B'; }
               else if (showResult && idx === selected && idx !== q.correct) { bg = '#FFE8E8'; border = '#E57373'; }
-              const hidden = showResult && idx !== q.correct && idx !== selected;
+              else if (showResult) { bg = '#fafafa'; border = '#eee'; }
               return (
                 <button key={idx} onClick={() => handleAnswer(idx)} disabled={showResult} style={{
-                  display: hidden ? 'none' : 'flex', alignItems: 'center', gap: 10, padding: '12px', background: bg,
+                  display: 'flex', alignItems: 'center', gap: 10, padding: '12px', background: bg,
                   border: `2px solid ${border}`, borderRadius: 12, cursor: showResult ? 'default' : 'pointer',
                   textAlign: 'left', width: '100%'
                 }}>
                   <span style={{ width: 26, height: 26, borderRadius: 8, background: 'linear-gradient(135deg, #FFE4EC, #F5E6FF)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#B57EDC', fontSize: 12, flexShrink: 0 }}>
                     {String.fromCharCode(65 + idx)}
                   </span>
-                  <span style={{ flex: 1, fontSize: 14, fontWeight: 500, color: '#4A3F55', lineHeight: 1.3 }}>{opt}</span>
+                  <span style={{ flex: 1, fontSize: 16, fontWeight: 500, color: '#4A3F55', lineHeight: 1.3 }}>{opt}</span>
                   {showResult && idx === q.correct && <span style={{ color: '#4CAF50', fontSize: 18, fontWeight: 700 }}>✓</span>}
                   {showResult && idx === selected && idx !== q.correct && <span style={{ color: '#E57373', fontSize: 18, fontWeight: 700 }}>✗</span>}
                 </button>
