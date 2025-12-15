@@ -1,0 +1,2598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Parent Quiz</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+const allQuestions = {
+  "newborn": [
+    {
+      "id": 1,
+      "question": "How should you place a baby to sleep to reduce SIDS risk?",
+      "options": [
+        "Always on their back until age 1",
+        "On their stomach for better comfort",
+        "On their side with a rolled blanket",
+        "Any position the baby prefers"
+      ],
+      "correct": 0,
+      "explanation": "The 'Back to Sleep' campaign has dramatically reduced SIDS. Babies should always sleep on their backs until their first birthday."
+    },
+    {
+      "id": 2,
+      "question": "How often should a newborn typically feed?",
+      "options": [
+        "On a strict schedule every 4-5 hours",
+        "Every 2-3 hours or on demand",
+        "Only when they cry intensely for food",
+        "Twice daily with larger portions"
+      ],
+      "correct": 1,
+      "explanation": "Newborns have tiny stomachs and need frequent feeding, typically every 2-3 hours including overnight, or whenever they show hunger cues."
+    },
+    {
+      "id": 3,
+      "question": "What should a newborn's sleep environment include?",
+      "options": [
+        "Soft bedding and bumper pads for safety",
+        "Loose blankets for warmth and comfort",
+        "A firm mattress with only a fitted sheet",
+        "Pillows positioned around the baby"
+      ],
+      "correct": 2,
+      "explanation": "A bare crib with only a firm mattress and fitted sheet is safest. Soft bedding, bumpers, and loose items increase suffocation risk."
+    },
+    {
+      "id": 4,
+      "question": "What are early hunger cues in a newborn?",
+      "options": [
+        "Only intense crying signals true hunger",
+        "Sleeping longer than usual between feeds",
+        "Turning away from the breast or bottle",
+        "Rooting, lip smacking, and hand-to-mouth movements"
+      ],
+      "correct": 3,
+      "explanation": "Early hunger cues include rooting, lip smacking, sucking motions, and bringing hands to mouth. Crying is a late hunger sign."
+    },
+    {
+      "id": 5,
+      "question": "How should you clean a newborn's umbilical cord stump?",
+      "options": [
+        "Keep it clean, dry, and exposed to air",
+        "Apply rubbing alcohol at every diaper change",
+        "Cover it with antibiotic ointment daily",
+        "Submerge it in bath water to soften"
+      ],
+      "correct": 0,
+      "explanation": "Current guidelines recommend keeping the stump clean and dry. Fold diapers below it and let air reach it until it falls off naturally."
+    },
+    {
+      "id": 6,
+      "question": "When does the umbilical cord stump typically fall off?",
+      "options": [
+        "Within the first 2-3 days of life",
+        "Usually between 1-3 weeks after birth",
+        "Not until 2 months of age",
+        "It needs to be removed by a doctor"
+      ],
+      "correct": 1,
+      "explanation": "The umbilical cord stump typically dries up and falls off on its own between 1-3 weeks after birth. Never pull it off."
+    },
+    {
+      "id": 7,
+      "question": "What type of bath should a newborn have before the cord falls off?",
+      "options": [
+        "Full immersion baths are perfectly safe",
+        "Only water with antibacterial soap",
+        "Sponge baths only until the stump falls off",
+        "No bathing at all until one month old"
+      ],
+      "correct": 2,
+      "explanation": "Stick to sponge baths until the umbilical cord stump falls off and heals. This keeps the area dry and promotes healing."
+    },
+    {
+      "id": 8,
+      "question": "How much weight loss is normal for a newborn in the first few days?",
+      "options": [
+        "Newborns should not lose any weight",
+        "Only premature babies lose weight",
+        "Losing 15-20% is expected and healthy",
+        "A loss of up to 7-10% is normal"
+      ],
+      "correct": 3,
+      "explanation": "Newborns typically lose 5-10% of their birth weight in the first few days as they lose excess fluid. They should regain it by 10-14 days."
+    },
+    {
+      "id": 9,
+      "question": "What does the soft spot (fontanelle) on a baby's head indicate?",
+      "options": [
+        "Normal anatomy that allows brain growth",
+        "A skull defect that needs monitoring",
+        "The baby was born prematurely",
+        "A fragile area requiring a protective hat"
+      ],
+      "correct": 0,
+      "explanation": "Fontanelles are normal gaps between skull bones that allow the brain to grow and helped the head pass through the birth canal."
+    },
+    {
+      "id": 10,
+      "question": "When does the anterior (front) fontanelle typically close?",
+      "options": [
+        "Within the first month of life",
+        "Between 12-18 months of age",
+        "By around 2-3 months of age",
+        "Not until age 3-4 years"
+      ],
+      "correct": 1,
+      "explanation": "The front fontanelle gradually closes between 12-18 months. The smaller back fontanelle closes earlier, around 2-3 months."
+    },
+    {
+      "id": 11,
+      "question": "Is it normal for newborns to have irregular breathing patterns?",
+      "options": [
+        "No, breathing should always be steady and even",
+        "Irregular breathing requires immediate medical care",
+        "Yes, periodic breathing with brief pauses is normal",
+        "Only if the baby has respiratory issues"
+      ],
+      "correct": 2,
+      "explanation": "Newborns often have irregular breathing with brief pauses up to 10 seconds. This periodic breathing is normal and improves as they mature."
+    },
+    {
+      "id": 12,
+      "question": "What is a normal respiratory rate for a newborn?",
+      "options": [
+        "10-20 breaths per minute like adults",
+        "Over 80 breaths per minute is expected",
+        "Breathing rate doesn't matter in newborns",
+        "30-60 breaths per minute is typical"
+      ],
+      "correct": 3,
+      "explanation": "Newborns breathe faster than adults, typically 30-60 breaths per minute. Rates consistently above 60 may indicate respiratory distress."
+    },
+    {
+      "id": 13,
+      "question": "What does it mean if a newborn's hands and feet appear bluish?",
+      "options": [
+        "It's often normal due to immature circulation",
+        "The baby is definitely too cold",
+        "It indicates a serious heart problem",
+        "The baby needs supplemental oxygen immediately"
+      ],
+      "correct": 0,
+      "explanation": "Acrocyanosis (bluish hands and feet) is common in newborns due to immature circulation. It's normal and resolves as they grow."
+    },
+    {
+      "id": 14,
+      "question": "How should you support a newborn when holding them?",
+      "options": [
+        "Support only their bottom, they can hold their head",
+        "Always support the head and neck until about 4 months",
+        "Hold them upright without any head support",
+        "Only support them when they're sleeping"
+      ],
+      "correct": 1,
+      "explanation": "Newborns cannot support their own heads. Always support the head and neck until they develop sufficient neck muscle control around 4 months."
+    },
+    {
+      "id": 15,
+      "question": "What is the 'rooting reflex' in newborns?",
+      "options": [
+        "The reflex that helps baby grip your finger",
+        "An automatic walking motion when held upright",
+        "When baby turns toward touch on their cheek to find food",
+        "The startle response to loud noises"
+      ],
+      "correct": 2,
+      "explanation": "The rooting reflex causes babies to turn their head toward anything that strokes their cheek, helping them find the breast or bottle."
+    },
+    {
+      "id": 16,
+      "question": "What causes the startle (Moro) reflex in newborns?",
+      "options": [
+        "It only happens when baby is in pain",
+        "It indicates neurological problems",
+        "Only premature babies have this reflex",
+        "Sudden movements, loud sounds, or feeling unsupported"
+      ],
+      "correct": 3,
+      "explanation": "The Moro reflex is triggered by sudden stimuli like loud noises or feeling like they're falling. Baby throws arms out then pulls them in."
+    },
+    {
+      "id": 17,
+      "question": "When does the Moro (startle) reflex typically disappear?",
+      "options": [
+        "Around 3-6 months of age",
+        "Within the first week of life",
+        "Not until the child is 2 years old",
+        "It never fully goes away"
+      ],
+      "correct": 0,
+      "explanation": "The Moro reflex is present at birth and typically disappears between 3-6 months as the nervous system matures."
+    },
+    {
+      "id": 18,
+      "question": "How many wet diapers should a newborn have per day after the first week?",
+      "options": [
+        "Only 1-2 wet diapers is sufficient",
+        "At least 6 or more wet diapers daily",
+        "Wet diapers aren't a reliable indicator",
+        "10-15 wet diapers minimum"
+      ],
+      "correct": 1,
+      "explanation": "After the first week, 6 or more wet diapers per day indicates adequate hydration and feeding. Fewer may signal dehydration."
+    },
+    {
+      "id": 19,
+      "question": "What color is normal newborn poop in the first few days?",
+      "options": [
+        "It should always be yellow from the start",
+        "Brown stool indicates healthy digestion",
+        "Black, tarry meconium is normal initially",
+        "Green stool always means something is wrong"
+      ],
+      "correct": 2,
+      "explanation": "Meconium, the first stool, is black and tarry. It transitions to green, then yellow/tan over the first few days as baby starts feeding."
+    },
+    {
+      "id": 20,
+      "question": "How often should a breastfed newborn poop?",
+      "options": [
+        "At least once every single feeding",
+        "Exactly three times per day, no more",
+        "Only once per week is perfectly normal",
+        "Several times daily, but frequency varies widely"
+      ],
+      "correct": 3,
+      "explanation": "Breastfed newborns often poop several times daily initially. After 6 weeks, some may go several days between bowel movements, which is also normal."
+    },
+    {
+      "id": 21,
+      "question": "Is it normal for newborn girls to have vaginal discharge or light bleeding?",
+      "options": [
+        "Yes, maternal hormones can cause this temporarily",
+        "No, this always requires immediate medical attention",
+        "Only if there was birth trauma",
+        "This indicates a serious infection"
+      ],
+      "correct": 0,
+      "explanation": "Maternal hormones can cause vaginal discharge or even a 'mini period' in newborn girls. It's temporary and resolves within the first week or two."
+    },
+    {
+      "id": 22,
+      "question": "Is it normal for newborn boys to have swollen genitals?",
+      "options": [
+        "No, swelling indicates a hernia",
+        "Yes, it's common due to maternal hormones",
+        "Only if they were born via C-section",
+        "This requires immediate circumcision"
+      ],
+      "correct": 1,
+      "explanation": "Swelling in the scrotum is common in newborn boys due to maternal hormones and fluid. It typically resolves within the first few weeks."
+    },
+    {
+      "id": 23,
+      "question": "What causes baby acne in newborns?",
+      "options": [
+        "Poor hygiene or not bathing enough",
+        "An allergic reaction to formula or breast milk",
+        "Maternal hormones still in the baby's system",
+        "Using the wrong type of baby lotion"
+      ],
+      "correct": 2,
+      "explanation": "Baby acne is caused by maternal hormones still present in baby's system. It's harmless and typically clears up within a few weeks without treatment."
+    },
+    {
+      "id": 24,
+      "question": "Should you pop or treat baby acne?",
+      "options": [
+        "Yes, pop them gently to help them heal faster",
+        "Apply adult acne medication to clear it up",
+        "Use rubbing alcohol to dry out the bumps",
+        "No, just keep skin clean and let it resolve naturally"
+      ],
+      "correct": 3,
+      "explanation": "Never pop or apply harsh products to baby acne. Simply keep baby's face clean with water and let it resolve on its own in a few weeks."
+    },
+    {
+      "id": 25,
+      "question": "What is cradle cap?",
+      "options": [
+        "A harmless scaly, crusty patch on baby's scalp",
+        "A type of contagious scalp infection",
+        "A sign of poor nutrition or allergies",
+        "A condition requiring prescription medication"
+      ],
+      "correct": 0,
+      "explanation": "Cradle cap is a common, harmless condition causing scaly, crusty patches on baby's scalp. It's not contagious and typically clears up on its own."
+    },
+    {
+      "id": 26,
+      "question": "How should you treat cradle cap?",
+      "options": [
+        "Apply dandruff shampoo made for adults",
+        "Gently massage with oil and brush with soft bristles",
+        "Pick off the scales with your fingernails",
+        "It requires prescription antifungal cream"
+      ],
+      "correct": 1,
+      "explanation": "Gently massage baby oil or coconut oil into the scalp, let it sit, then brush gently with a soft brush. It usually clears up on its own over time."
+    },
+    {
+      "id": 27,
+      "question": "Is it normal for newborns to sneeze frequently?",
+      "options": [
+        "No, frequent sneezing indicates allergies",
+        "Only sick babies sneeze a lot",
+        "Yes, it helps clear their nasal passages",
+        "Sneezing means the room is too dusty"
+      ],
+      "correct": 2,
+      "explanation": "Newborn sneezing is very common and normal. It helps clear their tiny nasal passages of mucus, amniotic fluid, and dust particles."
+    },
+    {
+      "id": 28,
+      "question": "Is it normal for newborns to hiccup frequently?",
+      "options": [
+        "Frequent hiccups indicate acid reflux disease",
+        "No, hiccups mean baby swallowed too much air",
+        "Hiccups require medication to stop them",
+        "Yes, hiccups are very common and harmless"
+      ],
+      "correct": 3,
+      "explanation": "Newborn hiccups are extremely common and harmless, caused by diaphragm spasms. They typically bother parents more than babies."
+    },
+    {
+      "id": 29,
+      "question": "What should you do when your newborn has hiccups?",
+      "options": [
+        "Nothing special, they'll resolve on their own",
+        "Give them water to make them stop",
+        "Hold your baby upside down briefly",
+        "Firmly pat their back to stop them"
+      ],
+      "correct": 0,
+      "explanation": "Newborn hiccups don't need treatment and will resolve on their own. They don't bother babies the way they bother adults."
+    },
+    {
+      "id": 30,
+      "question": "When should tummy time begin?",
+      "options": [
+        "Not until baby is 3 months old",
+        "From the very first days after birth",
+        "After the umbilical cord stump falls off",
+        "Only when baby can lift their head"
+      ],
+      "correct": 1,
+      "explanation": "Start tummy time from day one! Begin with just a few minutes several times daily to help build neck and core strength."
+    },
+    {
+      "id": 31,
+      "question": "Why is tummy time important for newborns?",
+      "options": [
+        "It helps prevent colic and gas",
+        "It helps babies sleep better at night",
+        "It builds neck, shoulder, and core strength",
+        "It's only important for premature babies"
+      ],
+      "correct": 2,
+      "explanation": "Tummy time strengthens muscles needed for motor milestones like holding head up, rolling over, and eventually crawling."
+    },
+    {
+      "id": 32,
+      "question": "How much tummy time should a newborn get each day?",
+      "options": [
+        "One 30-minute session is sufficient",
+        "At least 2 hours of continuous tummy time",
+        "Tummy time isn't needed until 6 months",
+        "Several short sessions totaling 15-30 minutes"
+      ],
+      "correct": 3,
+      "explanation": "Aim for several short sessions throughout the day, working up to a total of 15-30 minutes. Start with 1-2 minutes and gradually increase."
+    },
+    {
+      "id": 33,
+      "question": "What's the ideal room temperature for a sleeping newborn?",
+      "options": [
+        "68-72°F is the recommended range",
+        "75-80°F to keep baby warm enough",
+        "60-65°F promotes better sleep quality",
+        "Temperature doesn't affect newborn sleep"
+      ],
+      "correct": 0,
+      "explanation": "A room temperature of 68-72°F (20-22°C) is ideal. Overheating is a SIDS risk factor, so avoid making the room too warm."
+    },
+    {
+      "id": 34,
+      "question": "Should newborns wear hats while sleeping indoors?",
+      "options": [
+        "Yes, always to prevent heat loss",
+        "Only right after birth, then remove indoors",
+        "Yes, for at least the first three months",
+        "Hats should never be worn while sleeping"
+      ],
+      "correct": 1,
+      "explanation": "Hats help with temperature regulation right after birth but should be removed for sleep once home. Hats indoors can cause overheating."
+    },
+    {
+      "id": 35,
+      "question": "How do you know if a newborn is too hot while sleeping?",
+      "options": [
+        "Check if their hands and feet feel warm",
+        "A hot baby will always cry loudly",
+        "Feel their chest or back of neck for sweating",
+        "Warm babies sleep more soundly"
+      ],
+      "correct": 2,
+      "explanation": "Feel baby's chest or back of neck - these should be warm but not sweaty. Hands and feet are often cool and aren't reliable indicators."
+    },
+    {
+      "id": 36,
+      "question": "What is the safest sleepwear for a newborn?",
+      "options": [
+        "Multiple layers of loose blankets for warmth",
+        "Just a diaper to prevent overheating",
+        "Adult-sized blankets tucked in tightly",
+        "A fitted sleep sack or wearable blanket"
+      ],
+      "correct": 3,
+      "explanation": "Sleep sacks or wearable blankets are safest as they keep baby warm without loose fabric. Never use loose blankets, which pose suffocation risks."
+    },
+    {
+      "id": 37,
+      "question": "Is it safe for a newborn to sleep in a swing or bouncer?",
+      "options": [
+        "No, always transfer to a flat surface for sleep",
+        "Yes, these are designed for safe sleep",
+        "Only for short supervised naps",
+        "Yes, the incline helps with reflux"
+      ],
+      "correct": 0,
+      "explanation": "Swings, bouncers, and car seats aren't safe for sleep due to positional asphyxiation risk. Always move baby to a flat, firm surface for sleep."
+    },
+    {
+      "id": 38,
+      "question": "Should you wake a sleeping newborn to feed them?",
+      "options": [
+        "Never wake a sleeping baby for any reason",
+        "Yes, every 2-3 hours until weight gain is established",
+        "Only if they sleep longer than 8 hours",
+        "Waking babies disrupts their natural rhythm"
+      ],
+      "correct": 1,
+      "explanation": "In the first few weeks, wake baby every 2-3 hours to feed until they've regained birth weight and are gaining well."
+    },
+    {
+      "id": 39,
+      "question": "What is the 'witching hour' in newborns?",
+      "options": [
+        "The time when baby sleeps most deeply",
+        "The best time for bathing your baby",
+        "A period of fussiness, usually in the evening",
+        "When baby feeds most efficiently"
+      ],
+      "correct": 2,
+      "explanation": "The 'witching hour' refers to predictable fussy periods, typically in the evening. It peaks around 6 weeks and usually improves by 3-4 months."
+    },
+    {
+      "id": 40,
+      "question": "How can you soothe a fussy newborn during witching hour?",
+      "options": [
+        "Leave them alone to self-soothe",
+        "Give them sugar water to calm them",
+        "Withhold feeding until they stop crying",
+        "Try swaddling, shushing, swinging, and skin-to-skin"
+      ],
+      "correct": 3,
+      "explanation": "The 5 S's (swaddle, side/stomach position while held, shush, swing, suck) along with skin-to-skin contact can help soothe a fussy baby."
+    },
+    {
+      "id": 41,
+      "question": "Until what age is swaddling considered safe?",
+      "options": [
+        "Until baby shows signs of rolling over",
+        "It's safe throughout the entire first year",
+        "Only for the first week of life",
+        "Swaddling is never recommended anymore"
+      ],
+      "correct": 0,
+      "explanation": "Stop swaddling once baby shows any signs of trying to roll over, typically around 2-4 months. A swaddled baby who rolls over is at risk."
+    },
+    {
+      "id": 42,
+      "question": "What's the proper technique for swaddling a newborn?",
+      "options": [
+        "Arms outside, tight around legs and hips",
+        "Arms inside, snug around chest, loose around hips",
+        "Very tight everywhere to prevent movement",
+        "Loose overall so baby can move freely"
+      ],
+      "correct": 1,
+      "explanation": "Swaddle snugly around the chest and arms but allow room for hips to move. Too-tight swaddling around the legs can cause hip dysplasia."
+    },
+    {
+      "id": 43,
+      "question": "How often should you bathe a newborn?",
+      "options": [
+        "Daily baths are essential for hygiene",
+        "Only once per month in the first year",
+        "2-3 times per week is sufficient",
+        "Weekly baths until they start crawling"
+      ],
+      "correct": 2,
+      "explanation": "Newborns don't need daily baths - 2-3 times per week is plenty. Daily bathing can dry out their sensitive skin."
+    },
+    {
+      "id": 44,
+      "question": "What's the safest way to test bath water temperature?",
+      "options": [
+        "Use your hand to feel if it's warm",
+        "The water should feel hot to the touch",
+        "Use only cold water to prevent burns",
+        "Test with your elbow or inner wrist"
+      ],
+      "correct": 3,
+      "explanation": "Use your elbow or inner wrist, which are more sensitive than your hand. Water should feel warm, not hot - around 98-100°F."
+    },
+    {
+      "id": 45,
+      "question": "How should you clean a newborn's eyes?",
+      "options": [
+        "Wipe gently with a damp cotton ball, inner to outer",
+        "Use baby soap and a washcloth daily",
+        "Eyes are self-cleaning and need no care",
+        "Apply saline drops twice daily"
+      ],
+      "correct": 0,
+      "explanation": "Gently wipe each eye with a clean, damp cotton ball from the inner corner outward. Use a fresh cotton ball for each eye."
+    },
+    {
+      "id": 46,
+      "question": "Is it safe to clean inside a newborn's ears with Q-tips?",
+      "options": [
+        "Yes, daily ear cleaning is very important",
+        "No, only clean the outer ear with a cloth",
+        "Yes, but only the outer visible parts",
+        "Q-tips are fine if you're very gentle"
+      ],
+      "correct": 1,
+      "explanation": "Never insert anything into baby's ear canal. Clean only the outer ear with a soft, damp washcloth. Ears are self-cleaning."
+    },
+    {
+      "id": 47,
+      "question": "How should you trim a newborn's nails?",
+      "options": [
+        "Bite them off carefully with your teeth",
+        "Wait until baby is at least 6 months old",
+        "Use baby clippers or file when baby is calm or asleep",
+        "Let them wear down naturally over time"
+      ],
+      "correct": 2,
+      "explanation": "Use baby nail clippers, baby scissors, or an emery board when baby is calm or sleeping. Trim fingernails straight across."
+    },
+    {
+      "id": 48,
+      "question": "When should you first take your newborn outside?",
+      "options": [
+        "Not until they've had all their vaccinations",
+        "After the first month of staying home",
+        "Only after 3 months when immunity develops",
+        "You can go outside within the first few days"
+      ],
+      "correct": 3,
+      "explanation": "Fresh air is fine for newborns within the first few days. Avoid crowded places and sick people, and protect from extreme temperatures."
+    },
+    {
+      "id": 49,
+      "question": "Should visitors wash hands before holding a newborn?",
+      "options": [
+        "Yes, everyone should wash hands first",
+        "Only if they're visibly sick",
+        "Hand sanitizer is never effective enough",
+        "Hand washing isn't necessary for family"
+      ],
+      "correct": 0,
+      "explanation": "Everyone should wash hands thoroughly before holding a newborn. Their immune systems are immature and vulnerable to infections."
+    },
+    {
+      "id": 50,
+      "question": "When is the first pediatrician visit typically scheduled?",
+      "options": [
+        "At one month of age",
+        "Within 3-5 days after hospital discharge",
+        "Only if there are concerns or problems",
+        "At the two-week checkup only"
+      ],
+      "correct": 1,
+      "explanation": "The first visit is usually within 3-5 days of leaving the hospital to check weight gain, feeding, jaundice, and overall health."
+    }
+  ],
+  "development": [
+    {
+      "id": 1,
+      "question": "At what age do most babies start to smile socially (not just reflexively)?",
+      "options": [
+        "Around 6-8 weeks of age",
+        "Within the first week of life",
+        "Not until 4 months old",
+        "Only after 6 months of age"
+      ],
+      "correct": 0,
+      "explanation": "Social smiling, in response to faces and voices, typically emerges around 6-8 weeks. Earlier smiles are usually reflexive."
+    },
+    {
+      "id": 2,
+      "question": "When do most babies begin to hold their head up steadily?",
+      "options": [
+        "Within the first month",
+        "Around 3-4 months of age",
+        "Not until 6 months old",
+        "At birth, they can do this"
+      ],
+      "correct": 1,
+      "explanation": "Most babies develop good head control around 3-4 months. Before this, you should always support their head and neck."
+    },
+    {
+      "id": 3,
+      "question": "At what age do babies typically start to roll over?",
+      "options": [
+        "In the first month of life",
+        "Not until 9 months old",
+        "Around 4-6 months of age",
+        "Only after they can sit up"
+      ],
+      "correct": 2,
+      "explanation": "Most babies start rolling over between 4-6 months, usually tummy to back first, then back to tummy a bit later."
+    },
+    {
+      "id": 4,
+      "question": "When do most babies start sitting up without support?",
+      "options": [
+        "Around 2-3 months of age",
+        "At 4 months if given enough practice",
+        "Not until their first birthday",
+        "By about 6-8 months old"
+      ],
+      "correct": 3,
+      "explanation": "Most babies can sit unsupported between 6-8 months once they develop core strength and balance."
+    },
+    {
+      "id": 5,
+      "question": "What age do babies typically start crawling?",
+      "options": [
+        "Between 7-10 months typically",
+        "By 4-5 months of age",
+        "Not until after their first birthday",
+        "Crawling should start by 6 months"
+      ],
+      "correct": 0,
+      "explanation": "Most babies crawl between 7-10 months, though some skip crawling entirely and go straight to pulling up and cruising."
+    },
+    {
+      "id": 6,
+      "question": "Is it concerning if a baby doesn't crawl and goes straight to walking?",
+      "options": [
+        "Yes, crawling is essential for brain development",
+        "No, some babies skip crawling and that's normal",
+        "Only if they also have other delays",
+        "They should see a specialist immediately"
+      ],
+      "correct": 1,
+      "explanation": "Some babies skip traditional crawling and find other ways to move, like scooting. This is a normal variation in development."
+    },
+    {
+      "id": 7,
+      "question": "When do most babies start pulling up to stand?",
+      "options": [
+        "Around 3-4 months of age",
+        "Not until after 12 months",
+        "Between 8-10 months typically",
+        "Only after they master crawling first"
+      ],
+      "correct": 2,
+      "explanation": "Most babies start pulling themselves up to stand between 8-10 months, using furniture or caregivers for support."
+    },
+    {
+      "id": 8,
+      "question": "At what age do most babies take their first steps?",
+      "options": [
+        "By 6 months if they're advanced",
+        "Usually between 9-12 months",
+        "Not until 18 months typically",
+        "Around 12-15 months for most babies"
+      ],
+      "correct": 3,
+      "explanation": "Most babies take their first independent steps between 12-15 months. The normal range is quite wide, from 9-18 months."
+    },
+    {
+      "id": 9,
+      "question": "When should you be concerned if a baby isn't walking yet?",
+      "options": [
+        "If they're not walking by 18 months",
+        "If they're not walking by 12 months",
+        "If they're not walking by 15 months",
+        "Walking age varies too much to set a deadline"
+      ],
+      "correct": 0,
+      "explanation": "Talk to your pediatrician if baby isn't walking by 18 months. However, many healthy babies walk later, especially if premature."
+    },
+    {
+      "id": 10,
+      "question": "What is the typical age range for a baby to say their first words?",
+      "options": [
+        "Around 2-3 months of age",
+        "Usually between 10-14 months",
+        "By 6 months most babies say words",
+        "Not until after 18 months"
+      ],
+      "correct": 1,
+      "explanation": "Most babies say their first recognizable words between 10-14 months, usually 'mama' or 'dada', though babbling starts much earlier."
+    },
+    {
+      "id": 11,
+      "question": "When do babies typically start babbling with consonant sounds?",
+      "options": [
+        "Not until they're 9 months old",
+        "Within the first week of life",
+        "Around 4-6 months of age",
+        "Only after their first birthday"
+      ],
+      "correct": 2,
+      "explanation": "Babbling with consonant sounds like 'ba-ba' and 'da-da' typically begins around 4-6 months of age."
+    },
+    {
+      "id": 12,
+      "question": "How many words should a 12-month-old typically say?",
+      "options": [
+        "10-20 words is expected",
+        "At least 50 words by this age",
+        "No words are expected yet at 12 months",
+        "Usually 1-3 simple words"
+      ],
+      "correct": 3,
+      "explanation": "Most 12-month-olds say 1-3 words like 'mama,' 'dada,' or 'ball.' Understanding many more words than they can say is normal."
+    },
+    {
+      "id": 13,
+      "question": "When do babies start to understand the word 'no'?",
+      "options": [
+        "Around 8-10 months of age",
+        "From birth, they understand tone",
+        "Not until they're 2 years old",
+        "Only when they start speaking themselves"
+      ],
+      "correct": 0,
+      "explanation": "Babies begin to understand 'no' around 8-10 months, though they won't consistently follow it for much longer."
+    },
+    {
+      "id": 14,
+      "question": "At what age do babies typically develop object permanence?",
+      "options": [
+        "This ability is present from birth",
+        "Around 4-7 months of age",
+        "Not until 12 months old",
+        "Only after they start walking"
+      ],
+      "correct": 1,
+      "explanation": "Object permanence - understanding that things exist even when hidden - develops around 4-7 months, which is why peek-a-boo becomes fun."
+    },
+    {
+      "id": 15,
+      "question": "Why do babies enjoy peek-a-boo so much?",
+      "options": [
+        "Because they like the sound of the words",
+        "Only because parents act silly",
+        "Because they're developing object permanence",
+        "It helps them learn to close their eyes"
+      ],
+      "correct": 2,
+      "explanation": "Peek-a-boo is fascinating to babies because they're learning object permanence - that you still exist even when they can't see you."
+    },
+    {
+      "id": 16,
+      "question": "When do babies start to show stranger anxiety?",
+      "options": [
+        "From the first week of life",
+        "Not until 2 years old",
+        "Only in babies who aren't socialized",
+        "Around 6-9 months of age"
+      ],
+      "correct": 3,
+      "explanation": "Stranger anxiety typically begins around 6-9 months when babies develop strong attachments and can distinguish familiar from unfamiliar people."
+    },
+    {
+      "id": 17,
+      "question": "Is it normal for babies to become clingy and fussy around 8-10 months?",
+      "options": [
+        "Yes, separation anxiety is developmentally normal",
+        "No, this suggests attachment problems",
+        "Only if there was a change in caregivers",
+        "This indicates the baby is spoiled"
+      ],
+      "correct": 0,
+      "explanation": "Separation anxiety peaks around 8-10 months and is completely normal. It shows healthy attachment and cognitive development."
+    },
+    {
+      "id": 18,
+      "question": "When do babies typically develop the pincer grasp?",
+      "options": [
+        "By 3 months old if given practice",
+        "Around 8-10 months of age",
+        "Not until after their first birthday",
+        "At 6 months when starting solids"
+      ],
+      "correct": 1,
+      "explanation": "The pincer grasp - using thumb and forefinger to pick up small items - typically develops around 8-10 months."
+    },
+    {
+      "id": 19,
+      "question": "What is an important safety concern once baby develops the pincer grasp?",
+      "options": [
+        "They might scratch themselves",
+        "Their fingers may get stuck in things",
+        "They can pick up and choke on small objects",
+        "There are no new safety concerns"
+      ],
+      "correct": 2,
+      "explanation": "Once babies can pick up small objects with precision, choking hazards become a major concern. Keep small items out of reach."
+    },
+    {
+      "id": 20,
+      "question": "When do babies typically start pointing to things they want?",
+      "options": [
+        "Around 2-3 months of age",
+        "Not until 18 months old",
+        "Only after they can speak words",
+        "Between 9-12 months usually"
+      ],
+      "correct": 3,
+      "explanation": "Pointing emerges between 9-12 months and is an important communication milestone that precedes language development."
+    },
+    {
+      "id": 21,
+      "question": "Why is pointing considered an important developmental milestone?",
+      "options": [
+        "It demonstrates joint attention and communication intent",
+        "It shows fine motor skill development",
+        "It's only important for hand-eye coordination",
+        "Pointing has no developmental significance"
+      ],
+      "correct": 0,
+      "explanation": "Pointing shows joint attention - the ability to share focus with another person - which is crucial for language and social development."
+    },
+    {
+      "id": 22,
+      "question": "When do babies start to wave bye-bye?",
+      "options": [
+        "Around 3 months if taught early",
+        "Usually between 9-12 months",
+        "Not until after their first birthday",
+        "Only once they understand language"
+      ],
+      "correct": 1,
+      "explanation": "Most babies start waving bye-bye between 9-12 months, first imitating the gesture and then understanding its meaning."
+    },
+    {
+      "id": 23,
+      "question": "At what age do babies typically start clapping their hands?",
+      "options": [
+        "Around 2-3 months old",
+        "Not until 15 months of age",
+        "Usually between 8-10 months",
+        "Once they start walking"
+      ],
+      "correct": 2,
+      "explanation": "Hand clapping usually emerges between 8-10 months as babies develop coordination and enjoy imitating social gestures."
+    },
+    {
+      "id": 24,
+      "question": "When do babies start to recognize their own name?",
+      "options": [
+        "From birth, they know their name",
+        "Not until they can say it themselves",
+        "Only after their first birthday",
+        "Around 5-7 months of age"
+      ],
+      "correct": 3,
+      "explanation": "Babies typically start responding to their name around 5-7 months, though consistent response develops over the following months."
+    },
+    {
+      "id": 25,
+      "question": "What's a sign that a baby recognizes their name?",
+      "options": [
+        "They turn toward you when you say it",
+        "They say their name out loud",
+        "They only respond when you yell it",
+        "They smile at anyone who talks to them"
+      ],
+      "correct": 0,
+      "explanation": "A baby who recognizes their name will turn toward the sound or look at you when you say it, even in a normal conversational tone."
+    },
+    {
+      "id": 26,
+      "question": "When do most babies start to sleep through the night?",
+      "options": [
+        "By 2 months all babies sleep through",
+        "Not until after 12 months",
+        "Many babies sleep 6+ hours by 3-6 months",
+        "Babies shouldn't sleep through until age 2"
+      ],
+      "correct": 2,
+      "explanation": "Many babies can sleep 6+ hour stretches by 3-6 months, though it's normal for some to wake for feeds longer."
+    },
+    {
+      "id": 27,
+      "question": "How many naps do most 6-month-old babies need?",
+      "options": [
+        "Just one long nap per day",
+        "Four to five short naps daily",
+        "No naps are needed at this age",
+        "Usually 2-3 naps throughout the day"
+      ],
+      "correct": 3,
+      "explanation": "Most 6-month-olds take 2-3 naps per day. By 12-18 months, most transition to just one nap."
+    },
+    {
+      "id": 28,
+      "question": "When do most babies transition from two naps to one?",
+      "options": [
+        "Usually between 12-18 months",
+        "Around 6 months of age",
+        "Not until age 2-3 years",
+        "By 9 months all babies have one nap"
+      ],
+      "correct": 0,
+      "explanation": "Most babies transition from two naps to one somewhere between 12-18 months, though timing varies considerably."
+    },
+    {
+      "id": 29,
+      "question": "What is a 'sleep regression' in babies?",
+      "options": [
+        "When a baby stops sleeping altogether",
+        "A temporary disruption in previously good sleep patterns",
+        "A permanent change in sleep needs",
+        "A medical condition requiring treatment"
+      ],
+      "correct": 1,
+      "explanation": "Sleep regressions are temporary disruptions that often coincide with developmental leaps. The 4-month and 8-10 month regressions are common."
+    },
+    {
+      "id": 30,
+      "question": "At what age do most babies get their first tooth?",
+      "options": [
+        "Around 2 months old",
+        "Not until after their first birthday",
+        "Usually between 6-10 months",
+        "Teeth should appear by 4 months"
+      ],
+      "correct": 2,
+      "explanation": "Most babies get their first tooth between 6-10 months, though some get teeth earlier or later. First teeth are usually bottom front incisors."
+    },
+    {
+      "id": 31,
+      "question": "What are common signs of teething?",
+      "options": [
+        "High fever and severe diarrhea",
+        "Complete refusal to eat or drink",
+        "Sleeping much more than usual",
+        "Drooling, gum rubbing, and mild irritability"
+      ],
+      "correct": 3,
+      "explanation": "Teething typically causes increased drooling, gum rubbing, mild fussiness, and desire to chew. High fever or severe symptoms warrant a doctor visit."
+    },
+    {
+      "id": 32,
+      "question": "Is it safe to use teething gels with benzocaine for babies?",
+      "options": [
+        "No, the FDA warns against them for children under 2",
+        "Yes, they're the most effective option",
+        "Only if applied very sparingly",
+        "Yes, but only for babies over 6 months"
+      ],
+      "correct": 0,
+      "explanation": "The FDA warns against benzocaine products for children under 2 due to risk of a serious condition. Use safer alternatives like teething rings."
+    },
+    {
+      "id": 33,
+      "question": "What's a safe way to soothe a teething baby?",
+      "options": [
+        "Rub whiskey on their gums",
+        "Give them a chilled (not frozen) teething ring",
+        "Use adult pain relievers cut in half",
+        "Apply numbing gel frequently throughout the day"
+      ],
+      "correct": 1,
+      "explanation": "Safe options include chilled teething rings, cold washcloths to chew, gum massage with clean fingers, and age-appropriate pain relievers if needed."
+    },
+    {
+      "id": 34,
+      "question": "When should you start brushing baby's teeth?",
+      "options": [
+        "Only after they have several teeth",
+        "Not until they're 2 years old",
+        "As soon as the first tooth appears",
+        "Once they can spit out toothpaste"
+      ],
+      "correct": 2,
+      "explanation": "Start brushing as soon as the first tooth appears using a soft baby toothbrush and a rice-grain smear of fluoride toothpaste."
+    },
+    {
+      "id": 35,
+      "question": "When should a baby first see a dentist?",
+      "options": [
+        "Not until they start school",
+        "Only if there are visible problems",
+        "After all baby teeth have come in",
+        "Within 6 months of first tooth or by age 1"
+      ],
+      "correct": 3,
+      "explanation": "The American Academy of Pediatric Dentistry recommends a first dental visit within 6 months of the first tooth or by the first birthday."
+    },
+    {
+      "id": 36,
+      "question": "When can babies start drinking from a sippy cup?",
+      "options": [
+        "Around 6-9 months with help",
+        "Not until 18 months of age",
+        "Only after they stop using bottles",
+        "Babies shouldn't use sippy cups at all"
+      ],
+      "correct": 0,
+      "explanation": "Babies can start practicing with sippy cups around 6-9 months. This helps develop the oral motor skills for cup drinking."
+    },
+    {
+      "id": 37,
+      "question": "When should babies transition from bottles to cups?",
+      "options": [
+        "By 6 months of age",
+        "Between 12-18 months is recommended",
+        "Not until age 2-3 years",
+        "Only when the child decides they're ready"
+      ],
+      "correct": 1,
+      "explanation": "The AAP recommends weaning from bottles between 12-18 months to prevent tooth decay and promote proper oral development."
+    },
+    {
+      "id": 38,
+      "question": "At what age can babies start using a straw?",
+      "options": [
+        "Not until they're 2 years old",
+        "Only after mastering regular cups",
+        "Around 9-12 months with practice",
+        "Babies shouldn't use straws until age 3"
+      ],
+      "correct": 2,
+      "explanation": "Many babies can learn to use a straw around 9-12 months. Straw drinking actually supports oral motor development."
+    },
+    {
+      "id": 39,
+      "question": "How does a baby's vision develop in the first year?",
+      "options": [
+        "Babies are born with perfect 20/20 vision",
+        "Babies can only see black and white all year",
+        "Vision is fully developed by 2 months",
+        "Vision gradually improves from blurry to clear"
+      ],
+      "correct": 3,
+      "explanation": "Newborns see blurry shapes about 8-12 inches away. Color vision, depth perception, and visual clarity develop gradually through the first year."
+    },
+    {
+      "id": 40,
+      "question": "When do babies develop depth perception?",
+      "options": [
+        "Around 4-6 months of age",
+        "It's present from birth",
+        "Not until they start walking",
+        "Only after their first birthday"
+      ],
+      "correct": 0,
+      "explanation": "Depth perception begins developing around 4-6 months. This is why babies this age start to be afraid of heights and 'visual cliffs.'"
+    },
+    {
+      "id": 41,
+      "question": "When should you start reading books to your baby?",
+      "options": [
+        "Only once they can sit up on their own",
+        "You can start from birth",
+        "Not until they show interest in books",
+        "After they say their first words"
+      ],
+      "correct": 1,
+      "explanation": "You can read to babies from birth! Early reading builds language skills, strengthens bonding, and establishes literacy habits."
+    },
+    {
+      "id": 42,
+      "question": "What type of books are best for babies under 6 months?",
+      "options": [
+        "Complex storybooks with long narratives",
+        "Only books with words, no pictures",
+        "High-contrast black and white board books",
+        "Any adult books you're reading yourself"
+      ],
+      "correct": 2,
+      "explanation": "Young babies see high-contrast patterns best. Black and white board books and simple images capture their attention."
+    },
+    {
+      "id": 43,
+      "question": "Is screen time recommended for babies under 18 months?",
+      "options": [
+        "Yes, educational shows help them learn faster",
+        "30 minutes daily is the recommended amount",
+        "No, except for video chatting with family",
+        "Unlimited screen time is fine before age 1"
+      ],
+      "correct": 2,
+      "explanation": "The AAP recommends avoiding screen time for children under 18-24 months, except for video chatting, which supports social interaction."
+    },
+    {
+      "id": 44,
+      "question": "What is the most important type of play for baby development?",
+      "options": [
+        "Electronic learning toys with sounds",
+        "Independent solo play only",
+        "Structured educational activities",
+        "Interactive play with caregivers"
+      ],
+      "correct": 3,
+      "explanation": "Interactive play with caregivers - talking, singing, reading, and face-to-face games - is most beneficial for all areas of development."
+    },
+    {
+      "id": 45,
+      "question": "When do babies typically start to laugh out loud?",
+      "options": [
+        "Around 3-4 months of age",
+        "Within the first week of life",
+        "Not until 9 months old",
+        "Only after they can speak words"
+      ],
+      "correct": 0,
+      "explanation": "Most babies start laughing out loud around 3-4 months. Before this, you may see smiles and hear coos, but true laughter comes a bit later."
+    },
+    {
+      "id": 46,
+      "question": "At what age do babies typically show a preference for certain toys?",
+      "options": [
+        "From birth they have preferences",
+        "Around 6-9 months of age",
+        "Not until after age 2",
+        "Babies don't develop preferences until toddlerhood"
+      ],
+      "correct": 1,
+      "explanation": "Around 6-9 months, babies start showing preferences for certain toys, colors, or activities as their personality develops."
+    },
+    {
+      "id": 47,
+      "question": "When do babies typically start to imitate facial expressions?",
+      "options": [
+        "Not until 6 months of age",
+        "Newborns can imitate some expressions",
+        "Only after their first birthday",
+        "Imitation develops around age 2"
+      ],
+      "correct": 1,
+      "explanation": "Research shows that newborns can imitate some facial expressions like sticking out the tongue, though this ability becomes more sophisticated over time."
+    },
+    {
+      "id": 48,
+      "question": "What's the best response when your baby makes sounds or babbles?",
+      "options": [
+        "Stay quiet so they can focus on practicing",
+        "Only respond when they say real words",
+        "Respond conversationally as if they spoke",
+        "Correct their pronunciation immediately"
+      ],
+      "correct": 2,
+      "explanation": "Responding to babbles as if it's conversation - 'serve and return' - supports language development and teaches turn-taking in communication."
+    },
+    {
+      "id": 49,
+      "question": "When do babies start to understand simple instructions?",
+      "options": [
+        "Around 8-12 months of age",
+        "Not until they can speak in sentences",
+        "Only after age 2 years",
+        "From birth if you speak clearly"
+      ],
+      "correct": 0,
+      "explanation": "Babies start understanding simple instructions like 'give me the ball' or 'wave bye-bye' around 8-12 months, even before they can speak."
+    },
+    {
+      "id": 50,
+      "question": "What should you do if you're concerned about your baby's development?",
+      "options": [
+        "Wait and see since all babies develop differently",
+        "Talk to your pediatrician about your concerns",
+        "Compare your baby to others the same age",
+        "Only worry if others mention concerns too"
+      ],
+      "correct": 1,
+      "explanation": "Always discuss developmental concerns with your pediatrician. Early intervention can make a significant difference if there are delays."
+    }
+  ],
+  "safety": [
+    {
+      "id": 1,
+      "question": "What temperature indicates a fever in a baby under 3 months old?",
+      "options": [
+        "100.4°F (38°C) or higher is a fever",
+        "Only temperatures above 102°F are concerning",
+        "Babies can't get fevers until 6 months",
+        "Any temperature above 97°F is a fever"
+      ],
+      "correct": 0,
+      "explanation": "A rectal temperature of 100.4°F (38°C) or higher in a baby under 3 months is considered a fever and requires immediate medical attention."
+    },
+    {
+      "id": 2,
+      "question": "What should you do if your baby under 3 months has a fever?",
+      "options": [
+        "Give infant Tylenol and monitor at home",
+        "Call your doctor or go to the ER immediately",
+        "Give a cool bath to bring down the fever",
+        "Wait 24 hours to see if it resolves"
+      ],
+      "correct": 1,
+      "explanation": "A fever in a baby under 3 months is a medical emergency. Their immune systems are immature and infections can become serious quickly."
+    },
+    {
+      "id": 3,
+      "question": "Which is the most accurate way to take a baby's temperature?",
+      "options": [
+        "Forehead thermometer strip",
+        "Under the armpit is just as accurate",
+        "Rectal temperature is most accurate",
+        "Feeling the forehead with your hand"
+      ],
+      "correct": 2,
+      "explanation": "Rectal temperature is the gold standard for accuracy in babies. Other methods can be used for screening but may be less precise."
+    },
+    {
+      "id": 4,
+      "question": "At what age can you give a baby acetaminophen (Tylenol)?",
+      "options": [
+        "From birth if the dose is small enough",
+        "Not until 6 months of age",
+        "Only after their first birthday",
+        "After 2 months, with doctor guidance on dosing"
+      ],
+      "correct": 3,
+      "explanation": "Acetaminophen can generally be given after 2 months of age. Always consult your doctor for proper dosing based on weight, not just age."
+    },
+    {
+      "id": 5,
+      "question": "At what age can you give a baby ibuprofen (Advil/Motrin)?",
+      "options": [
+        "After 6 months of age",
+        "From birth with correct dosing",
+        "After 2 months of age",
+        "Not until after age 1"
+      ],
+      "correct": 0,
+      "explanation": "Ibuprofen should not be given to babies under 6 months. Before that age, only acetaminophen is appropriate (after 2 months)."
+    },
+    {
+      "id": 6,
+      "question": "How should fever medication dosing be determined for babies?",
+      "options": [
+        "Always use the age listed on the package",
+        "Based on the baby's weight, not age",
+        "Use half the adult dose",
+        "Any small amount is safe for babies"
+      ],
+      "correct": 1,
+      "explanation": "Medication dosing for babies should be based on weight for accuracy. A 2-month-old who weighs 12 lbs needs a different dose than one who weighs 9 lbs."
+    },
+    {
+      "id": 7,
+      "question": "Is it safe to give babies over-the-counter cough and cold medicines?",
+      "options": [
+        "Yes, use infant formulas as directed",
+        "Only decongestants are safe for babies",
+        "No, they're not safe for children under 4 years",
+        "Yes, but only half the recommended dose"
+      ],
+      "correct": 2,
+      "explanation": "OTC cough and cold medicines are not recommended for children under 4 due to serious safety concerns and lack of effectiveness."
+    },
+    {
+      "id": 8,
+      "question": "What's the safest position for a car seat for infants?",
+      "options": [
+        "Forward-facing in the back seat",
+        "Rear-facing in the front passenger seat",
+        "Forward-facing in the front seat",
+        "Rear-facing in the back seat"
+      ],
+      "correct": 3,
+      "explanation": "Infants should always be rear-facing in the back seat. This position best protects the head, neck, and spine in a crash."
+    },
+    {
+      "id": 9,
+      "question": "How long should a child remain rear-facing in a car seat?",
+      "options": [
+        "Until they exceed the seat's rear-facing limits",
+        "Until they turn 1 year old",
+        "Until they reach 20 pounds",
+        "Only until they can sit up on their own"
+      ],
+      "correct": 0,
+      "explanation": "Children should remain rear-facing until they exceed the height or weight limit of their seat - often until age 2-4 with modern convertible seats."
+    },
+    {
+      "id": 10,
+      "question": "Where is the safest position in the car for a child's car seat?",
+      "options": [
+        "The front passenger seat",
+        "The center of the back seat if possible",
+        "Either side of the back seat equally",
+        "Behind the driver for easy visibility"
+      ],
+      "correct": 1,
+      "explanation": "The center of the back seat is statistically the safest position, away from side impacts. If center installation isn't possible, either side is fine."
+    },
+    {
+      "id": 11,
+      "question": "Is it safe for a baby to sleep in their car seat outside the car?",
+      "options": [
+        "Yes, car seats are designed for safe sleep",
+        "Yes, but only for naps under 30 minutes",
+        "No, always move baby to a flat surface",
+        "Only if the seat is at a 45-degree angle"
+      ],
+      "correct": 2,
+      "explanation": "Babies should not sleep in car seats outside the car due to risk of positional asphyxiation. The inclined position can restrict breathing."
+    },
+    {
+      "id": 12,
+      "question": "How tight should car seat straps be on a baby?",
+      "options": [
+        "Loose enough to fit your whole hand under them",
+        "Tight enough to leave marks on the skin",
+        "Loose for comfort during long trips",
+        "Snug enough that you can't pinch excess strap"
+      ],
+      "correct": 3,
+      "explanation": "The harness should be snug - you shouldn't be able to pinch any webbing between your fingers. Straps should be at or below shoulder level for rear-facing."
+    },
+    {
+      "id": 13,
+      "question": "Should you put a baby in a car seat while wearing a bulky winter coat?",
+      "options": [
+        "No, remove coat and use a blanket over straps",
+        "Yes, to keep them warm during travel",
+        "Only for short trips in cold weather",
+        "Coats are fine as long as straps are tightened"
+      ],
+      "correct": 0,
+      "explanation": "Bulky coats prevent proper harness fit and can compress in a crash. Remove the coat, buckle baby in, then put a blanket over the straps."
+    },
+    {
+      "id": 14,
+      "question": "When should childproofing begin in your home?",
+      "options": [
+        "Only once baby starts crawling",
+        "Before baby starts rolling over",
+        "After the first birthday",
+        "When baby starts walking"
+      ],
+      "correct": 1,
+      "explanation": "Start childproofing before baby becomes mobile - ideally before they roll over. Babies develop quickly and you want to be prepared."
+    },
+    {
+      "id": 15,
+      "question": "What size object is a choking hazard for babies and toddlers?",
+      "options": [
+        "Only items smaller than a pea",
+        "Objects smaller than a golf ball",
+        "Anything that fits through a toilet paper roll",
+        "Only hard candy and similar items"
+      ],
+      "correct": 2,
+      "explanation": "If an object can fit through a toilet paper roll (about 1.25 inches), it's a choking hazard for children under 3."
+    },
+    {
+      "id": 16,
+      "question": "What foods are common choking hazards for babies?",
+      "options": [
+        "Only hard candy and gum",
+        "All solid foods until age 2",
+        "Only crunchy foods like crackers",
+        "Hot dogs, grapes, nuts, popcorn, and raw carrots"
+      ],
+      "correct": 3,
+      "explanation": "Common choking hazards include hot dogs, whole grapes, nuts, popcorn, raw carrots, chunks of cheese or meat, and hard candies."
+    },
+    {
+      "id": 17,
+      "question": "How should grapes be prepared for a baby or toddler?",
+      "options": [
+        "Quartered lengthwise into thin pieces",
+        "Served whole once baby has teeth",
+        "Cut in half lengthwise",
+        "Grapes are safe whole after 12 months"
+      ],
+      "correct": 0,
+      "explanation": "Grapes should be quartered lengthwise (not just halved) until age 3-4. Their round shape and size make them a serious choking hazard."
+    },
+    {
+      "id": 18,
+      "question": "What should you do if a baby is choking and cannot cough or cry?",
+      "options": [
+        "Immediately perform the Heimlich maneuver",
+        "Give 5 back blows followed by 5 chest thrusts",
+        "Reach into their mouth to find the object",
+        "Hold them upside down and shake"
+      ],
+      "correct": 1,
+      "explanation": "For infants, give 5 back blows between shoulder blades, then 5 chest thrusts. Don't do abdominal thrusts (Heimlich) on babies under 1."
+    },
+    {
+      "id": 19,
+      "question": "When should you call 911 for a choking baby?",
+      "options": [
+        "Only after trying back blows for 10 minutes",
+        "Only if the baby's lips turn blue",
+        "If the baby becomes unresponsive or you can't clear it",
+        "Always wait to see if they can clear it themselves"
+      ],
+      "correct": 2,
+      "explanation": "Call 911 if the baby becomes unresponsive, you cannot clear the object, or the baby stops breathing. Continue rescue efforts while waiting for help."
+    },
+    {
+      "id": 20,
+      "question": "How should household chemicals and medicines be stored?",
+      "options": [
+        "Under the sink is fine with childproof caps",
+        "On high shelves without additional locks",
+        "Anywhere as long as they have safety caps",
+        "In high cabinets with child-resistant locks"
+      ],
+      "correct": 3,
+      "explanation": "Store all medicines and chemicals up high AND locked. Child-resistant caps are not childproof - many children can open them."
+    },
+    {
+      "id": 21,
+      "question": "What should you do first if you suspect your baby ingested something toxic?",
+      "options": [
+        "Call Poison Control at 1-800-222-1222",
+        "Make the baby vomit immediately",
+        "Give them milk to neutralize the poison",
+        "Drive immediately to the emergency room"
+      ],
+      "correct": 0,
+      "explanation": "Call Poison Control first. Don't induce vomiting unless they tell you to - some substances cause more damage coming back up."
+    },
+    {
+      "id": 22,
+      "question": "How far from the wall should a crib be placed?",
+      "options": [
+        "Right against the wall for stability",
+        "At least 3 feet away from walls and furniture",
+        "It doesn't matter where the crib is placed",
+        "Only 6 inches away for easy access"
+      ],
+      "correct": 1,
+      "explanation": "Cribs should be at least 3 feet from walls, windows, cords, and furniture to prevent strangulation hazards and climbing accidents."
+    },
+    {
+      "id": 23,
+      "question": "At what age can babies safely sleep with a blanket?",
+      "options": [
+        "From birth if it's a small blanket",
+        "Once they can roll over both ways",
+        "After 12 months when SIDS risk decreases",
+        "Only after age 2 years"
+      ],
+      "correct": 2,
+      "explanation": "The AAP recommends waiting until at least 12 months for loose bedding. The risk of SIDS and suffocation decreases significantly after the first birthday."
+    },
+    {
+      "id": 24,
+      "question": "What type of crib mattress is safest for babies?",
+      "options": [
+        "Soft and plush for comfort",
+        "Memory foam for support",
+        "Pillow-top mattresses are best",
+        "Firm with a tight-fitting sheet only"
+      ],
+      "correct": 3,
+      "explanation": "Crib mattresses should be firm (not indent when baby lies on it) with only a tight-fitting sheet. Soft surfaces increase suffocation risk."
+    },
+    {
+      "id": 25,
+      "question": "When should crib bumpers be used?",
+      "options": [
+        "Never, they're a suffocation hazard",
+        "Only mesh bumpers are safe from birth",
+        "After baby can roll over on their own",
+        "Always, to prevent head injuries"
+      ],
+      "correct": 0,
+      "explanation": "Crib bumpers of any kind are not recommended due to suffocation, strangulation, and entrapment risks. They don't prevent significant injuries."
+    },
+    {
+      "id": 26,
+      "question": "At what age should the crib mattress be lowered to the lowest setting?",
+      "options": [
+        "As soon as baby comes home from hospital",
+        "When baby can sit up independently",
+        "Once baby starts pulling to stand",
+        "The mattress height doesn't need changing"
+      ],
+      "correct": 2,
+      "explanation": "Lower the mattress to the lowest setting when baby starts pulling up to stand or before they can climb out, usually around 8-10 months."
+    },
+    {
+      "id": 27,
+      "question": "How many inches of water can a baby drown in?",
+      "options": [
+        "At least 6 inches are needed",
+        "Only in water over their head",
+        "Drowning only happens in deep water",
+        "As little as 1-2 inches of water"
+      ],
+      "correct": 3,
+      "explanation": "A baby can drown in as little as 1-2 inches of water. Never leave babies unattended near any water, including buckets, toilets, and bathtubs."
+    },
+    {
+      "id": 28,
+      "question": "Should you ever leave a baby alone in the bathtub, even briefly?",
+      "options": [
+        "Never, not even for a few seconds",
+        "Yes, if the water is shallow enough",
+        "Only if they can sit up on their own",
+        "Yes, if you're within earshot"
+      ],
+      "correct": 0,
+      "explanation": "Never leave a baby alone in or near water, even for a second. Drowning can happen quickly and silently. Take the baby with you if you must leave."
+    },
+    {
+      "id": 29,
+      "question": "What's the safest water temperature for a baby's bath?",
+      "options": [
+        "Hot enough to feel warm on your hand",
+        "Around 100°F (38°C), test with elbow or wrist",
+        "As warm as a comfortable adult bath",
+        "Cool water is safest to prevent burns"
+      ],
+      "correct": 1,
+      "explanation": "Bath water should be around 100°F (38°C) - warm but not hot. Test with your elbow or inner wrist, which are more sensitive than your hand."
+    },
+    {
+      "id": 30,
+      "question": "What setting should your water heater be set to with a baby in the home?",
+      "options": [
+        "As hot as possible for cleaning dishes",
+        "It doesn't matter with proper supervision",
+        "120°F (49°C) or lower to prevent scalds",
+        "130°F is the standard safe setting"
+      ],
+      "correct": 2,
+      "explanation": "Set water heaters to 120°F or lower to prevent scalding burns. At 140°F, a child can get a third-degree burn in 3 seconds."
+    },
+    {
+      "id": 31,
+      "question": "What should you check before placing baby on any elevated surface?",
+      "options": [
+        "Nothing specific, just be quick",
+        "That there are guardrails on all sides",
+        "Elevated surfaces are never safe",
+        "That you have one hand on baby at all times"
+      ],
+      "correct": 3,
+      "explanation": "Always keep one hand on baby when they're on any elevated surface like changing tables. Falls happen quickly, even before babies can roll."
+    },
+    {
+      "id": 32,
+      "question": "At what age do most stair gates need to be installed?",
+      "options": [
+        "Once baby starts scooting or crawling",
+        "Before baby starts rolling over",
+        "Only when baby starts walking",
+        "Stair gates aren't necessary until age 2"
+      ],
+      "correct": 0,
+      "explanation": "Install stair gates before baby becomes mobile - when they start scooting or crawling, usually around 6-8 months."
+    },
+    {
+      "id": 33,
+      "question": "What type of gate should be used at the top of stairs?",
+      "options": [
+        "Any pressure-mounted gate works fine",
+        "Only hardware-mounted gates should be used",
+        "Gates aren't needed at the top of stairs",
+        "Accordion-style gates are safest"
+      ],
+      "correct": 1,
+      "explanation": "Hardware-mounted gates that screw into the wall are required for the top of stairs. Pressure-mounted gates can be pushed open and cause falls."
+    },
+    {
+      "id": 34,
+      "question": "When can babies be moved to a forward-facing car seat?",
+      "options": [
+        "After their first birthday",
+        "When they reach 20 pounds",
+        "When they exceed their seat's rear-facing limits",
+        "As soon as their legs touch the back seat"
+      ],
+      "correct": 2,
+      "explanation": "Keep children rear-facing until they exceed the height or weight limit of their seat. This is typically age 2-4 with modern convertible seats."
+    },
+    {
+      "id": 35,
+      "question": "How should you respond to a minor head bump in a baby?",
+      "options": [
+        "Apply ice and monitor for concerning symptoms",
+        "Always go to the ER for any head injury",
+        "Keep baby awake for 24 hours straight",
+        "Minor bumps don't need any attention"
+      ],
+      "correct": 0,
+      "explanation": "For minor bumps, apply a cold compress and watch for warning signs like vomiting, extreme sleepiness, unequal pupils, or unusual behavior."
+    },
+    {
+      "id": 36,
+      "question": "What symptom after a head injury requires immediate medical attention?",
+      "options": [
+        "A small bump or bruise forming",
+        "Vomiting more than once or loss of consciousness",
+        "Crying for a few minutes after the fall",
+        "Being sleepy at normal nap time"
+      ],
+      "correct": 1,
+      "explanation": "Seek immediate care for repeated vomiting, loss of consciousness, seizures, unequal pupils, blood from ears or nose, or significant behavior changes."
+    },
+    {
+      "id": 37,
+      "question": "What's the proper way to treat a minor burn on a baby?",
+      "options": [
+        "Apply butter or oil to the burn",
+        "Pop any blisters that form",
+        "Run cool (not cold) water over it",
+        "Apply ice directly to the burn"
+      ],
+      "correct": 2,
+      "explanation": "Run cool water over the burn for 10-20 minutes. Don't use ice, butter, or oils. Cover with a clean bandage and seek medical care for serious burns."
+    },
+    {
+      "id": 38,
+      "question": "When should a baby see a doctor for vomiting?",
+      "options": [
+        "If there's blood, bile, or signs of dehydration",
+        "Only if vomiting continues for a week",
+        "Vomiting is never a concern in babies",
+        "Only if it happens more than 10 times daily"
+      ],
+      "correct": 0,
+      "explanation": "Seek care if vomit contains blood or green bile, if baby shows signs of dehydration, has high fever, appears in pain, or seems lethargic."
+    },
+    {
+      "id": 39,
+      "question": "What are signs of dehydration in a baby?",
+      "options": [
+        "Frequent wet diapers and drooling",
+        "Fewer wet diapers, sunken fontanelle, no tears",
+        "Being fussy during feeding time",
+        "Sleeping more than usual at night"
+      ],
+      "correct": 1,
+      "explanation": "Signs include fewer than 6 wet diapers in 24 hours, sunken soft spot, no tears when crying, dry mouth, and lethargy."
+    },
+    {
+      "id": 40,
+      "question": "How much direct sunlight is safe for babies under 6 months?",
+      "options": [
+        "30 minutes daily for vitamin D",
+        "1-2 hours with sunscreen protection",
+        "Avoid direct sunlight as much as possible",
+        "Sun exposure is important for all babies"
+      ],
+      "correct": 2,
+      "explanation": "Babies under 6 months should be kept out of direct sunlight. Use shade, hats, and protective clothing rather than sunscreen at this age."
+    },
+    {
+      "id": 41,
+      "question": "When can you start using sunscreen on a baby?",
+      "options": [
+        "From birth for any sun exposure",
+        "Only after 2 years old",
+        "After 6 months of age",
+        "Sunscreen is never safe for babies"
+      ],
+      "correct": 2,
+      "explanation": "Sunscreen can be used on babies 6 months and older. Before that, keep them in shade and use protective clothing and hats."
+    },
+    {
+      "id": 42,
+      "question": "What type of sunscreen is recommended for babies?",
+      "options": [
+        "Any adult sunscreen will work",
+        "Only spray sunscreens for easy application",
+        "Chemical sunscreens absorb better",
+        "Mineral-based (zinc oxide or titanium dioxide)"
+      ],
+      "correct": 3,
+      "explanation": "Mineral-based sunscreens with zinc oxide or titanium dioxide are gentlest on baby skin. They sit on top of the skin rather than being absorbed."
+    },
+    {
+      "id": 43,
+      "question": "Is secondhand smoke dangerous for babies?",
+      "options": [
+        "Only if the room is small and enclosed",
+        "No, if smoke is blown away from the baby",
+        "Yes, it increases SIDS risk and respiratory illness",
+        "Only cigarette smoke, not other types"
+      ],
+      "correct": 2,
+      "explanation": "Secondhand smoke significantly increases SIDS risk, respiratory infections, ear infections, and asthma. Never smoke around babies."
+    },
+    {
+      "id": 44,
+      "question": "What is 'thirdhand smoke'?",
+      "options": [
+        "Smoke from three cigarettes at once",
+        "Smoke from e-cigarettes or vaping",
+        "A myth with no scientific basis",
+        "Residue that lingers on surfaces and clothing"
+      ],
+      "correct": 3,
+      "explanation": "Thirdhand smoke is the residue that remains on surfaces, clothing, and furniture. Babies are exposed through touch and can be harmed by these chemicals."
+    },
+    {
+      "id": 45,
+      "question": "What should you do if baby has a febrile seizure from fever?",
+      "options": [
+        "Lower baby to the floor, stay calm, and time it",
+        "Put something in their mouth to prevent biting",
+        "Immediately put them in a cold bath",
+        "Hold them tightly to stop the shaking"
+      ],
+      "correct": 0,
+      "explanation": "Stay calm, lay baby on a safe surface on their side, don't restrain them or put anything in their mouth. Time the seizure and call the doctor."
+    },
+    {
+      "id": 46,
+      "question": "Are febrile seizures common in babies and toddlers?",
+      "options": [
+        "No, they indicate a serious brain problem",
+        "Yes, they occur in 2-5% of children and are usually harmless",
+        "Only in babies who have epilepsy",
+        "They only happen with extremely high fevers"
+      ],
+      "correct": 1,
+      "explanation": "Febrile seizures affect 2-5% of children between 6 months and 5 years. While scary, they're usually brief and don't cause lasting harm."
+    },
+    {
+      "id": 47,
+      "question": "How often should car seats be checked for recalls?",
+      "options": [
+        "Only when first purchased",
+        "Car seats are never recalled",
+        "Regularly, and register your seat with the manufacturer",
+        "Only if there's visible damage"
+      ],
+      "correct": 2,
+      "explanation": "Register your car seat with the manufacturer and check for recalls regularly. Recalls can happen anytime and may not be widely publicized."
+    },
+    {
+      "id": 48,
+      "question": "When should you replace a car seat?",
+      "options": [
+        "After any crash, after expiration, or per manufacturer guidelines",
+        "Only when it's visibly damaged",
+        "Every year regardless of condition",
+        "Never, car seats don't expire"
+      ],
+      "correct": 0,
+      "explanation": "Replace car seats after any crash (even minor ones), after the expiration date, or according to manufacturer guidelines. Materials degrade over time."
+    },
+    {
+      "id": 49,
+      "question": "What's the biggest danger of button batteries for babies?",
+      "options": [
+        "They're only a choking hazard",
+        "They can cause severe burns if swallowed",
+        "They leak harmful acid immediately",
+        "Button batteries aren't particularly dangerous"
+      ],
+      "correct": 1,
+      "explanation": "Swallowed button batteries can cause severe burns and tissue damage within hours, even death. This is a medical emergency requiring immediate care."
+    },
+    {
+      "id": 50,
+      "question": "What household items are surprising strangulation hazards for babies?",
+      "options": [
+        "Only blind cords are dangerous",
+        "Nothing in a typical home is a strangulation risk",
+        "Cords, ribbons, strings, and even monitor cables",
+        "Only items longer than 3 feet"
+      ],
+      "correct": 2,
+      "explanation": "Strangulation hazards include blind cords, curtain strings, clothing drawstrings, pacifier cords, monitor cables, and ribbons. Keep all cords out of reach."
+    }
+  ],
+  "feeding": [
+    {
+      "id": 1,
+      "question": "How soon after birth should breastfeeding ideally begin?",
+      "options": [
+        "Within the first hour if possible",
+        "After baby has slept for several hours",
+        "Only after 24 hours of rest",
+        "Whenever milk first comes in"
+      ],
+      "correct": 0,
+      "explanation": "The WHO recommends initiating breastfeeding within the first hour of birth. Early skin-to-skin contact and feeding promotes bonding and milk production."
+    },
+    {
+      "id": 2,
+      "question": "What is colostrum and why is it important?",
+      "options": [
+        "Formula supplement for the first week",
+        "First milk, rich in antibodies and nutrients",
+        "A medication to help milk come in",
+        "A breast pump lubricant"
+      ],
+      "correct": 1,
+      "explanation": "Colostrum is the thick, yellowish first milk produced. It's packed with antibodies, protein, and nutrients - sometimes called 'liquid gold' for its benefits."
+    },
+    {
+      "id": 3,
+      "question": "How often should a newborn breastfeed?",
+      "options": [
+        "Every 4-6 hours on a schedule",
+        "Only when they cry from hunger",
+        "Every 2-3 hours or 8-12 times daily",
+        "Three meals a day like adults"
+      ],
+      "correct": 2,
+      "explanation": "Newborns should feed every 2-3 hours (8-12 times daily), including overnight. Frequent feeding establishes milk supply and ensures adequate nutrition."
+    },
+    {
+      "id": 4,
+      "question": "What is 'cluster feeding' in breastfed babies?",
+      "options": [
+        "Feeding only in the morning hours",
+        "A sign of insufficient milk supply",
+        "Feeding from both breasts equally",
+        "Multiple feedings close together, often in evenings"
+      ],
+      "correct": 3,
+      "explanation": "Cluster feeding is when babies feed several times close together, often in the evening. It's normal, helps boost milk supply, and often precedes longer sleep stretches."
+    },
+    {
+      "id": 5,
+      "question": "Is it normal for breastfeeding to hurt?",
+      "options": [
+        "Mild discomfort initially is normal, but pain isn't",
+        "Yes, pain is expected and normal throughout",
+        "No, any pain means something is wrong",
+        "Only during the first month should it hurt"
+      ],
+      "correct": 0,
+      "explanation": "Mild discomfort in the first week is common as you and baby learn. Persistent pain, cracked nipples, or severe pain often indicate a latch problem that can be fixed."
+    },
+    {
+      "id": 6,
+      "question": "What's the best indicator that a breastfed baby is getting enough milk?",
+      "options": [
+        "The baby seems satisfied after feeding",
+        "The mother's breasts feel empty after feeding",
+        "Adequate wet and dirty diapers plus weight gain",
+        "The baby sleeps through the night early"
+      ],
+      "correct": 2,
+      "explanation": "The best indicators are 6+ wet diapers daily, regular bowel movements, and consistent weight gain at doctor visits."
+    },
+    {
+      "id": 7,
+      "question": "How many wet diapers should a breastfed newborn have after the first week?",
+      "options": [
+        "1-2 wet diapers per day is adequate",
+        "10-15 wet diapers daily",
+        "Wet diaper count doesn't matter",
+        "At least 6 wet diapers per day"
+      ],
+      "correct": 3,
+      "explanation": "After milk comes in, expect at least 6 wet diapers daily. This indicates baby is getting enough fluids and breastfeeding is going well."
+    },
+    {
+      "id": 8,
+      "question": "What should you do if you're concerned about low milk supply?",
+      "options": [
+        "Feed more frequently and consult a lactation specialist",
+        "Immediately switch to formula",
+        "Reduce feeding to save milk",
+        "Milk supply can't be increased once established"
+      ],
+      "correct": 0,
+      "explanation": "More frequent nursing and proper latch are the best ways to increase supply. A lactation consultant can help identify issues and provide support."
+    },
+    {
+      "id": 9,
+      "question": "Is it safe to breastfeed while taking medications?",
+      "options": [
+        "No, all medications pass into breast milk",
+        "Only over-the-counter medications are safe",
+        "Most are safe, but always check with your doctor",
+        "You must stop breastfeeding for any medication"
+      ],
+      "correct": 2,
+      "explanation": "Many medications are safe while breastfeeding, but always check with your doctor or pharmacist. Resources like LactMed can provide detailed information."
+    },
+    {
+      "id": 10,
+      "question": "How should breast milk be stored at room temperature?",
+      "options": [
+        "Up to 24 hours at room temperature",
+        "Room temperature storage isn't safe",
+        "Up to 8 hours at room temperature",
+        "Up to 4 hours at room temperature"
+      ],
+      "correct": 3,
+      "explanation": "Freshly expressed breast milk can stay at room temperature (up to 77°F/25°C) for up to 4 hours. In warmer conditions, use it sooner or refrigerate."
+    },
+    {
+      "id": 11,
+      "question": "How long can breast milk be stored in a refrigerator?",
+      "options": [
+        "Up to 4 days at 40°F or below",
+        "Up to 24 hours",
+        "Up to 2 weeks",
+        "Only overnight storage is safe"
+      ],
+      "correct": 0,
+      "explanation": "Breast milk can be safely stored in the refrigerator (40°F/4°C or below) for up to 4 days. Use within 24 hours if previously frozen."
+    },
+    {
+      "id": 12,
+      "question": "What's the safest way to thaw frozen breast milk?",
+      "options": [
+        "In the microwave for convenience",
+        "Overnight in the refrigerator or under warm water",
+        "At room temperature for several hours",
+        "In boiling water for quick thawing"
+      ],
+      "correct": 1,
+      "explanation": "Thaw frozen milk in the refrigerator overnight or under warm running water. Never microwave, which creates hot spots and destroys nutrients."
+    },
+    {
+      "id": 13,
+      "question": "Can you refreeze breast milk once it's been thawed?",
+      "options": [
+        "Yes, as many times as needed",
+        "Only if it was thawed in the refrigerator",
+        "No, thawed milk should not be refrozen",
+        "Yes, if it's still cold to the touch"
+      ],
+      "correct": 2,
+      "explanation": "Once breast milk is fully thawed, it should not be refrozen. Use thawed milk within 24 hours if stored in the refrigerator."
+    },
+    {
+      "id": 14,
+      "question": "How should you warm a bottle of breast milk or formula?",
+      "options": [
+        "Microwave on low power for 30 seconds",
+        "Boil it to ensure it's sterile",
+        "Mix in some hot water from the tap",
+        "Place in warm water or use a bottle warmer"
+      ],
+      "correct": 3,
+      "explanation": "Warm bottles by placing in warm water or using a bottle warmer. Microwaving creates hot spots that can burn baby and destroys nutrients."
+    },
+    {
+      "id": 15,
+      "question": "What is the correct way to prepare powdered infant formula?",
+      "options": [
+        "Add powder to cold water and shake well",
+        "Heat water, add powder, shake, then cool to warm",
+        "Any temperature water works equally well",
+        "Mix with boiling water for sterilization"
+      ],
+      "correct": 1,
+      "explanation": "Heat water to at least 158°F (70°C), add powder, shake, then cool to body temperature. This kills any bacteria in the powder."
+    },
+    {
+      "id": 16,
+      "question": "How long is prepared formula safe at room temperature?",
+      "options": [
+        "Up to 24 hours at room temperature",
+        "Up to 6 hours after preparation",
+        "Until baby finishes the bottle, no time limit",
+        "No more than 2 hours at room temperature"
+      ],
+      "correct": 3,
+      "explanation": "Prepared formula should be used within 2 hours at room temperature. Bacteria grow quickly in the nutrients that make formula so good for babies."
+    },
+    {
+      "id": 17,
+      "question": "Can you save and reuse formula that baby didn't finish?",
+      "options": [
+        "Yes, within 4 hours if refrigerated",
+        "Yes, until the next feeding",
+        "No, discard any formula baby has drunk from",
+        "Only if you heat it again to kill bacteria"
+      ],
+      "correct": 2,
+      "explanation": "Discard any formula baby has drunk from within 1 hour. Bacteria from baby's mouth contaminate the formula and multiply quickly."
+    },
+    {
+      "id": 18,
+      "question": "Is it necessary to sterilize bottles before every use?",
+      "options": [
+        "Only before first use, then regular washing is fine",
+        "Yes, sterilize before every feeding",
+        "Never, sterilizing weakens baby's immunity",
+        "Only until baby is 6 months old"
+      ],
+      "correct": 0,
+      "explanation": "Sterilize new bottles before first use. After that, thorough washing with hot soapy water is sufficient for healthy, full-term babies."
+    },
+    {
+      "id": 19,
+      "question": "When should solid foods be introduced to babies?",
+      "options": [
+        "As early as 2-3 months for better sleep",
+        "Not until after the first birthday",
+        "Around 6 months of age",
+        "Only when baby has teeth"
+      ],
+      "correct": 2,
+      "explanation": "The AAP recommends introducing solids around 6 months when babies show developmental readiness - sitting with support, interest in food, and loss of tongue-thrust reflex."
+    },
+    {
+      "id": 20,
+      "question": "What are signs that a baby is ready for solid foods?",
+      "options": [
+        "Watching parents eat intently",
+        "Sleeping through the night consistently",
+        "Fussing during or after breastfeeding",
+        "Can sit with support and shows interest in food"
+      ],
+      "correct": 3,
+      "explanation": "Readiness signs include sitting with minimal support, good head control, showing interest in food, opening mouth when food approaches, and loss of tongue-thrust reflex."
+    },
+    {
+      "id": 21,
+      "question": "What foods should be avoided for babies under 12 months?",
+      "options": [
+        "Honey, cow's milk as main drink, and choking hazards",
+        "All fruits and vegetables",
+        "All meat and protein foods",
+        "Any foods with natural sugars"
+      ],
+      "correct": 0,
+      "explanation": "Avoid honey (botulism risk), cow's milk as main drink (inadequate nutrition), whole nuts, whole grapes, and other choking hazards."
+    },
+    {
+      "id": 22,
+      "question": "Why is honey dangerous for babies under 12 months?",
+      "options": [
+        "It's too sweet for their taste buds",
+        "It can contain botulism spores their systems can't handle",
+        "It causes severe tooth decay",
+        "Honey allergies are very common in babies"
+      ],
+      "correct": 1,
+      "explanation": "Honey may contain Clostridium botulinum spores. Babies' immature digestive systems can't prevent these spores from growing, causing infant botulism."
+    },
+    {
+      "id": 23,
+      "question": "What is the current guidance on introducing allergenic foods?",
+      "options": [
+        "Delay allergenic foods until age 2-3",
+        "Only introduce if there's no family allergy history",
+        "Introduce them early, around 4-6 months",
+        "Allergenic foods should always be avoided"
+      ],
+      "correct": 2,
+      "explanation": "Current research shows early introduction of allergenic foods (around 4-6 months) may actually prevent allergies, especially for high-risk babies."
+    },
+    {
+      "id": 24,
+      "question": "How should peanuts be introduced to babies?",
+      "options": [
+        "Give whole peanuts once they have teeth",
+        "Wait until at least age 3 for safety",
+        "Only give peanuts if there's no family history",
+        "In age-appropriate forms like thinned peanut butter or puffs"
+      ],
+      "correct": 3,
+      "explanation": "Introduce peanuts in safe forms - thinned smooth peanut butter mixed in purees, or peanut puffs. Never give whole peanuts, which are choking hazards until age 4+."
+    },
+    {
+      "id": 25,
+      "question": "When introducing new foods, how many days should you wait between each?",
+      "options": [
+        "Wait 2-3 days to watch for reactions",
+        "Wait at least 2 weeks between new foods",
+        "No waiting is necessary",
+        "Wait one month between each new food"
+      ],
+      "correct": 0,
+      "explanation": "Waiting 2-3 days between new foods helps identify any allergic reactions. Once foods are tolerated, you can combine them and introduce new ones more quickly."
+    },
+    {
+      "id": 26,
+      "question": "What is baby-led weaning?",
+      "options": [
+        "Stopping breastfeeding before 6 months",
+        "Letting baby self-feed soft finger foods instead of purees",
+        "Waiting until baby refuses breast milk",
+        "Only giving formula after 6 months"
+      ],
+      "correct": 1,
+      "explanation": "Baby-led weaning involves offering soft finger foods and letting baby self-feed rather than spoon-feeding purees. Both approaches can work well."
+    },
+    {
+      "id": 27,
+      "question": "Is gagging normal when babies start eating solid foods?",
+      "options": [
+        "No, gagging means baby isn't ready for solids",
+        "Gagging indicates a food allergy",
+        "Yes, gagging is a normal protective reflex",
+        "Only if baby is doing baby-led weaning"
+      ],
+      "correct": 2,
+      "explanation": "Gagging is normal and actually protective - it helps prevent choking. Babies' gag reflex is triggered further forward on the tongue than adults'."
+    },
+    {
+      "id": 28,
+      "question": "What's the difference between gagging and choking?",
+      "options": [
+        "There is no difference, they're the same thing",
+        "Gagging is dangerous; choking is not",
+        "Both always require intervention",
+        "Gagging is loud with coughing; choking is silent"
+      ],
+      "correct": 3,
+      "explanation": "Gagging is noisy - coughing, sputtering, red face. Choking is silent with no airflow. Gagging resolves itself; choking requires immediate help."
+    },
+    {
+      "id": 29,
+      "question": "At what age can babies have cow's milk as their main drink?",
+      "options": [
+        "After 12 months of age",
+        "At 6 months when starting solids",
+        "At 9 months if they don't like formula",
+        "Cow's milk is never appropriate for babies"
+      ],
+      "correct": 0,
+      "explanation": "Cow's milk should not be a main drink until after 12 months. It doesn't have enough iron and has too much protein and sodium for younger babies."
+    },
+    {
+      "id": 30,
+      "question": "What type of cow's milk is recommended after 12 months?",
+      "options": [
+        "Skim milk for lower calories",
+        "2% milk from the start",
+        "Any type of milk is equally fine",
+        "Whole milk until age 2"
+      ],
+      "correct": 3,
+      "explanation": "Whole milk is recommended for children 12 months to 2 years because the fat supports brain development. After age 2, lower-fat options can be considered."
+    },
+    {
+      "id": 31,
+      "question": "How much milk should a toddler (1-2 years) drink daily?",
+      "options": [
+        "About 16-24 ounces (2-3 cups) per day",
+        "As much as they want, milk is very healthy",
+        "Only 4-8 ounces per day",
+        "At least 32 ounces daily for calcium"
+      ],
+      "correct": 0,
+      "explanation": "Toddlers should have about 16-24 ounces of milk daily. Too much milk can fill them up and reduce appetite for solid foods, and can lead to iron deficiency."
+    },
+    {
+      "id": 32,
+      "question": "Should you give juice to babies?",
+      "options": [
+        "Yes, juice is healthy and provides vitamins",
+        "Juice is fine at any age if diluted",
+        "No juice before 12 months, then limit amounts",
+        "Only fresh-squeezed juice is safe"
+      ],
+      "correct": 2,
+      "explanation": "The AAP recommends no juice before 12 months. After that, limit to 4 oz of 100% fruit juice daily. Whole fruit is always a better choice."
+    },
+    {
+      "id": 33,
+      "question": "Should you give water to babies under 6 months?",
+      "options": [
+        "Yes, especially in hot weather",
+        "Small amounts are fine anytime",
+        "Only boiled water is safe for babies",
+        "No, breast milk or formula provides all needed fluids"
+      ],
+      "correct": 3,
+      "explanation": "Babies under 6 months get all needed hydration from breast milk or formula. Extra water can interfere with nutrition and cause water intoxication."
+    },
+    {
+      "id": 34,
+      "question": "When can babies start drinking water?",
+      "options": [
+        "Around 6 months when starting solids",
+        "From birth in small amounts",
+        "Not until after their first birthday",
+        "Only after fully weaned from milk"
+      ],
+      "correct": 0,
+      "explanation": "Small amounts of water can be introduced around 6 months when starting solids. Breast milk or formula should still be the main fluid source."
+    },
+    {
+      "id": 35,
+      "question": "Is it okay to add cereal to a baby's bottle?",
+      "options": [
+        "Yes, it helps babies sleep longer",
+        "No, unless medically advised for reflux",
+        "Yes, once baby is 4 months old",
+        "It's the best way to introduce solids"
+      ],
+      "correct": 1,
+      "explanation": "Don't add cereal to bottles unless specifically advised by your doctor for medical reasons. It doesn't help sleep and can pose choking risks."
+    },
+    {
+      "id": 36,
+      "question": "What type of first foods are good options for babies?",
+      "options": [
+        "Only rice cereal should be first",
+        "Fruit should always come first",
+        "Iron-rich foods like pureed meats or iron-fortified cereals",
+        "Dairy products are the best starter foods"
+      ],
+      "correct": 2,
+      "explanation": "Iron-rich foods are recommended early because babies' iron stores from birth start depleting around 6 months."
+    },
+    {
+      "id": 37,
+      "question": "Do babies need to eat foods in a specific order?",
+      "options": [
+        "Yes, always vegetables before fruits",
+        "Yes, cereals must come before all other foods",
+        "Proteins should always be introduced last",
+        "No, there's no required order for food introduction"
+      ],
+      "correct": 3,
+      "explanation": "There's no evidence that food introduction order matters. The old advice to give vegetables before fruits (to prevent sweet preferences) isn't supported by research."
+    },
+    {
+      "id": 38,
+      "question": "How should baby food be seasoned?",
+      "options": [
+        "Add salt to make it palatable",
+        "Herbs and spices are fine, but avoid added salt and sugar",
+        "No seasonings until after age 1",
+        "Baby food should always taste bland"
+      ],
+      "correct": 1,
+      "explanation": "Mild herbs and spices are fine and help develop varied tastes. Avoid added salt (hard on kidneys) and sugar."
+    },
+    {
+      "id": 39,
+      "question": "Is it okay for babies to eat the same foods as the family?",
+      "options": [
+        "No, babies need special baby food only",
+        "Only after they turn 2 years old",
+        "Yes, with appropriate texture and no choking hazards",
+        "Family foods are too flavorful for babies"
+      ],
+      "correct": 2,
+      "explanation": "Babies can eat modified versions of family foods - just adjust texture, remove choking hazards, and avoid honey, excess salt, and sugar."
+    },
+    {
+      "id": 40,
+      "question": "What should you do if baby refuses a new food?",
+      "options": [
+        "Keep offering it, babies may need 10-15 exposures",
+        "Never offer that food again",
+        "Hide it in foods they like",
+        "Force them to eat it for nutrition"
+      ],
+      "correct": 0,
+      "explanation": "Keep offering rejected foods without pressure. Research shows babies may need 10-15 exposures to accept a new food. Never force feeding."
+    },
+    {
+      "id": 41,
+      "question": "Is it normal for babies to eat less some days?",
+      "options": [
+        "No, intake should be consistent every day",
+        "Yes, appetite naturally varies day to day",
+        "Decreased appetite always means illness",
+        "Babies should eat more each day as they grow"
+      ],
+      "correct": 1,
+      "explanation": "Appetite variation is completely normal. Babies self-regulate well. Some days they're hungrier than others. Look at patterns over weeks, not individual meals."
+    },
+    {
+      "id": 42,
+      "question": "What is the 'division of responsibility' in feeding?",
+      "options": [
+        "Children should make all food decisions",
+        "Parents decide what, when, where; child decides how much",
+        "Parents control all aspects of feeding",
+        "Feeding responsibilities should be equal"
+      ],
+      "correct": 1,
+      "explanation": "Ellyn Satter's model: parents decide what foods are offered, when, and where meals happen. Children decide whether and how much to eat."
+    },
+    {
+      "id": 43,
+      "question": "Should you make separate 'kid food' meals for babies and toddlers?",
+      "options": [
+        "Yes, children need special kid-friendly meals",
+        "No, offer the same foods as the family when possible",
+        "Only chicken nuggets and pasta until age 5",
+        "Children can't digest adult foods properly"
+      ],
+      "correct": 1,
+      "explanation": "Offering family foods (appropriately modified) exposes children to varied flavors and textures. 'Kid food' menus can create picky eating patterns."
+    },
+    {
+      "id": 44,
+      "question": "What's the best response to messy eating in babies?",
+      "options": [
+        "Clean up constantly to keep baby neat",
+        "Feed baby yourself to prevent mess",
+        "Allow mess - it's important for learning and development",
+        "Messy eating should be discouraged"
+      ],
+      "correct": 2,
+      "explanation": "Messy eating is developmentally important. Exploring texture, practicing self-feeding, and making messes all support motor development and healthy eating relationships."
+    },
+    {
+      "id": 45,
+      "question": "How long should a typical baby meal last?",
+      "options": [
+        "About 20-30 minutes maximum",
+        "Until all the food is eaten",
+        "At least one hour for proper nutrition",
+        "Only 5 minutes per feeding"
+      ],
+      "correct": 0,
+      "explanation": "Keep meals to about 20-30 minutes. Longer meals become battles. If baby loses interest, they're done - trust their appetite cues."
+    },
+    {
+      "id": 46,
+      "question": "Should babies be distracted with screens during feeding?",
+      "options": [
+        "Yes, it makes feeding easier",
+        "No, distraction interferes with hunger cues",
+        "Only for difficult feeders",
+        "Screen time during meals is beneficial"
+      ],
+      "correct": 1,
+      "explanation": "Avoid screens during meals. Distracted eating prevents babies from recognizing fullness cues and can lead to overeating and unhealthy eating patterns."
+    },
+    {
+      "id": 47,
+      "question": "What does iron-deficiency look like in babies?",
+      "options": [
+        "Excessive energy and hyperactivity",
+        "Very dark stool and vomiting",
+        "Pale skin, fatigue, poor appetite, slow development",
+        "Extremely large appetite"
+      ],
+      "correct": 2,
+      "explanation": "Iron deficiency can cause pale skin, fatigue, irritability, poor appetite, and developmental delays. It's common after 6 months when iron stores deplete."
+    },
+    {
+      "id": 48,
+      "question": "Do breastfed babies need vitamin D supplements?",
+      "options": [
+        "No, breast milk provides everything needed",
+        "Only in winter months",
+        "Only if mother is deficient",
+        "Yes, 400 IU daily is recommended"
+      ],
+      "correct": 3,
+      "explanation": "The AAP recommends 400 IU of vitamin D daily for breastfed infants because breast milk doesn't contain adequate vitamin D."
+    },
+    {
+      "id": 49,
+      "question": "When should you be concerned about a baby's eating habits?",
+      "options": [
+        "If there's persistent difficulty feeding or no weight gain",
+        "If they ever refuse a meal",
+        "If they don't eat as much as other babies",
+        "Eating concerns are never warranted in babies"
+      ],
+      "correct": 0,
+      "explanation": "See a doctor if baby has persistent feeding difficulties, isn't gaining weight, refuses entire food groups consistently, or shows signs of oral-motor problems."
+    },
+    {
+      "id": 50,
+      "question": "What's the most important thing to remember about infant feeding?",
+      "options": [
+        "Following strict schedules is essential",
+        "Quantity matters more than quality",
+        "All babies should eat exactly the same amounts",
+        "Responsive feeding based on baby's cues"
+      ],
+      "correct": 3,
+      "explanation": "Responsive feeding - watching for and responding to baby's hunger and fullness cues - supports healthy eating relationships and appropriate growth."
+    }
+  ]
+};
+
+const tests = [
+  { id: 'newborn', title: 'Newborn Basics', subtitle: '0-3 Months', description: 'Sleep, feeding, cord care, and early health signs', icon: '👶', color: '#FF9AAB' },
+  { id: 'development', title: 'Baby Development', subtitle: '3-12 Months', description: 'Milestones, motor skills, and cognitive growth', icon: '🌱', color: '#7BC67B' },
+  { id: 'safety', title: 'Health & Safety', subtitle: 'Essential Knowledge', description: 'Illness, emergencies, and childproofing', icon: '🛡️', color: '#5DADE2' },
+  { id: 'feeding', title: 'Feeding & Nutrition', subtitle: 'Birth to 12 Months', description: 'Breastfeeding, formula, solids, and allergies', icon: '🍼', color: '#F7B731' },
+];
+
+function App() {
+  const [screen, setScreen] = React.useState('select');
+  const [selectedTest, setSelectedTest] = React.useState(null);
+  const [questions, setQuestions] = React.useState([]);
+  const [currentQ, setCurrentQ] = React.useState(0);
+  const [selected, setSelected] = React.useState(null);
+  const [showResult, setShowResult] = React.useState(false);
+  const [score, setScore] = React.useState(0);
+
+  const startTest = (test) => {
+    setSelectedTest(test);
+    setQuestions([...allQuestions[test.id]].sort(() => Math.random() - 0.5));
+    setScreen('quiz');
+    setCurrentQ(0);
+    setScore(0);
+    setSelected(null);
+    setShowResult(false);
+  };
+
+  const handleAnswer = (idx) => {
+    if (showResult) return;
+    setSelected(idx);
+    setShowResult(true);
+    if (idx === questions[currentQ].correct) setScore(s => s + 1);
+  };
+
+  const nextQuestion = () => {
+    if (currentQ < questions.length - 1) {
+      setCurrentQ(currentQ + 1);
+      setSelected(null);
+      setShowResult(false);
+    } else {
+      setScreen('results');
+    }
+  };
+
+  const backToSelect = () => {
+    setScreen('select');
+    setSelectedTest(null);
+  };
+
+  if (screen === 'select') {
+    return (
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #FFF5F5 0%, #FFF0F7 50%, #F5F0FF 100%)' }}>
+        <div style={{ textAlign: 'center', padding: '40px 20px 24px' }}>
+          <span style={{ fontSize: 48 }}>👶</span>
+          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#4A3F55', margin: '8px 0' }}>New Parent Quiz</h1>
+          <p style={{ fontSize: 16, color: '#8B7E9B' }}>Test your parenting knowledge</p>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '0 20px', maxWidth: 500, margin: '0 auto' }}>
+          {tests.map((test) => (
+            <button key={test.id} onClick={() => startTest(test)} style={{
+              background: '#fff', borderRadius: 20, padding: 24, border: `2px solid ${test.color}`,
+              cursor: 'pointer', textAlign: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.06)', width: '100%'
+            }}>
+              <div style={{ width: 64, height: 64, borderRadius: '50%', background: `${test.color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                <span style={{ fontSize: 32 }}>{test.icon}</span>
+              </div>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#4A3F55', margin: 0 }}>{test.title}</h2>
+              <span style={{ fontSize: 13, fontWeight: 600, color: test.color }}>{test.subtitle}</span>
+              <p style={{ fontSize: 14, color: '#6B5B7A', margin: '12px 0', lineHeight: 1.4 }}>{test.description}</p>
+              <span style={{ fontSize: 13, color: '#8B7E9B', background: '#F5F0FF', padding: '6px 12px', borderRadius: 12 }}>
+                {allQuestions[test.id].length} questions
+              </span>
+            </button>
+          ))}
+        </div>
+        <p style={{ textAlign: 'center', padding: 32, fontSize: 14, color: '#8B7E9B' }}>200 questions across 4 topics</p>
+      </div>
+    );
+  }
+
+  if (screen === 'quiz') {
+    const q = questions[currentQ];
+    return (
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #FFF5F5 0%, #FFF0F7 50%, #F5F0FF 100%)', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ background: `linear-gradient(135deg, ${selectedTest.color}, ${selectedTest.color}CC)`, padding: '10px 16px 12px', borderRadius: '0 0 20px 20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <button onClick={backToSelect} style={{ background: 'rgba(255,255,255,0.3)', border: 'none', borderRadius: 8, width: 32, height: 32, fontSize: 16, color: '#fff', cursor: 'pointer', flexShrink: 0 }}>←</button>
+            <div style={{ flex: 1, height: 6, background: 'rgba(255,255,255,0.4)', borderRadius: 6, overflow: 'hidden' }}>
+              <div style={{ height: '100%', background: '#fff', borderRadius: 6, width: `${((currentQ + 1) / questions.length) * 100}%`, transition: 'width 0.3s' }} />
+            </div>
+            <span style={{ color: '#fff', fontSize: 13, fontWeight: 600, flexShrink: 0 }}>{currentQ + 1}/{questions.length}</span>
+            <span style={{ background: 'rgba(255,255,255,0.9)', color: '#4A3F55', padding: '4px 10px', borderRadius: 12, fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{score}✓</span>
+          </div>
+        </div>
+        <div style={{ flex: 1, padding: '16px 16px 16px', display: 'flex', flexDirection: 'column' }}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, color: '#4A3F55', lineHeight: 1.35, marginBottom: 14 }}>{q.question}</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {q.options.map((opt, idx) => {
+              let bg = '#fff', border = '#F0E6F5';
+              if (showResult && idx === q.correct) { bg = '#E8F8E8'; border = '#7BC67B'; }
+              else if (showResult && idx === selected && idx !== q.correct) { bg = '#FFE8E8'; border = '#E57373'; }
+              else if (showResult) { bg = '#fafafa'; border = '#eee'; }
+              return (
+                <button key={idx} onClick={() => handleAnswer(idx)} disabled={showResult} style={{
+                  display: 'flex', alignItems: 'center', gap: 10, padding: '12px', background: bg,
+                  border: `2px solid ${border}`, borderRadius: 12, cursor: showResult ? 'default' : 'pointer',
+                  textAlign: 'left', width: '100%'
+                }}>
+                  <span style={{ width: 26, height: 26, borderRadius: 8, background: 'linear-gradient(135deg, #FFE4EC, #F5E6FF)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#B57EDC', fontSize: 12, flexShrink: 0 }}>
+                    {String.fromCharCode(65 + idx)}
+                  </span>
+                  <span style={{ flex: 1, fontSize: 16, fontWeight: 500, color: '#4A3F55', lineHeight: 1.3 }}>{opt}</span>
+                  {showResult && idx === q.correct && <span style={{ color: '#4CAF50', fontSize: 18, fontWeight: 700 }}>✓</span>}
+                  {showResult && idx === selected && idx !== q.correct && <span style={{ color: '#E57373', fontSize: 18, fontWeight: 700 }}>✗</span>}
+                </button>
+              );
+            })}
+          </div>
+          {showResult && (
+            <div style={{ marginTop: 12, padding: 14, background: selected === q.correct ? '#E8F8E8' : '#FFF8E7', borderRadius: 12, border: `1px solid ${selected === q.correct ? '#7BC67B' : '#FFE4B5'}` }}>
+              <p style={{ fontSize: 13, color: '#5A5A5A', lineHeight: 1.5, margin: 0 }}>{q.explanation}</p>
+            </div>
+          )}
+          {showResult && (
+            <button onClick={nextQuestion} style={{
+              marginTop: 12, padding: '14px 24px', width: '100%',
+              background: `linear-gradient(135deg, ${selectedTest.color}, ${selectedTest.color}CC)`,
+              border: 'none', borderRadius: 12, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.15)'
+            }}>
+              {currentQ < questions.length - 1 ? 'Next' : 'Results'} →
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (screen === 'results') {
+    const pct = Math.round((score / questions.length) * 100);
+    const grade = pct >= 90 ? 'A' : pct >= 80 ? 'B' : pct >= 70 ? 'C' : pct >= 60 ? 'D' : 'F';
+    const emoji = pct >= 90 ? '🌟' : pct >= 80 ? '👏' : pct >= 70 ? '📚' : pct >= 60 ? '💪' : '🌱';
+    const msg = pct >= 90 ? "Outstanding!" : pct >= 80 ? "Great job!" : pct >= 70 ? "Good work!" : pct >= 60 ? "Keep learning!" : "Keep studying!";
+    return (
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #FFF5F5 0%, #FFF0F7 50%, #F5F0FF 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, textAlign: 'center' }}>
+        <span style={{ fontSize: 64, marginBottom: 16 }}>{emoji}</span>
+        <h1 style={{ fontSize: 24, fontWeight: 800, color: '#4A3F55', margin: '0 0 4px' }}>{selectedTest.title}</h1>
+        <p style={{ fontSize: 16, color: '#8B7E9B', margin: '0 0 24px' }}>Quiz Complete!</p>
+        <div style={{ width: 100, height: 100, borderRadius: '50%', background: `linear-gradient(135deg, ${selectedTest.color}, ${selectedTest.color}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20, boxShadow: '0 8px 32px rgba(0,0,0,0.15)' }}>
+          <span style={{ fontSize: 48, fontWeight: 800, color: '#fff' }}>{grade}</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 8 }}>
+          <span style={{ fontSize: 48, fontWeight: 800, color: '#4A3F55' }}>{score}</span>
+          <span style={{ fontSize: 32, color: '#C9A0DC' }}>/</span>
+          <span style={{ fontSize: 32, fontWeight: 600, color: '#8B7E9B' }}>{questions.length}</span>
+        </div>
+        <p style={{ fontSize: 20, fontWeight: 600, color: '#B57EDC', marginBottom: 16 }}>{pct}%</p>
+        <p style={{ fontSize: 18, color: '#6B5B7A', marginBottom: 32 }}>{msg}</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', maxWidth: 300 }}>
+          <button onClick={() => startTest(selectedTest)} style={{ padding: '18px 48px', background: `linear-gradient(135deg, ${selectedTest.color}, ${selectedTest.color}CC)`, border: 'none', borderRadius: 16, color: '#fff', fontSize: 17, fontWeight: 700, cursor: 'pointer' }}>Try Again</button>
+          <button onClick={backToSelect} style={{ padding: '16px 48px', background: 'transparent', border: '2px solid #E0D6E9', borderRadius: 16, color: '#6B5B7A', fontSize: 16, fontWeight: 600, cursor: 'pointer' }}>Choose Another Test</button>
+        </div>
+      </div>
+    );
+  }
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
