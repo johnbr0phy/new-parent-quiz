@@ -13,6 +13,7 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: system-ui, -apple-system, sans-serif; }
+    .progress-ring { transform: rotate(-90deg); }
   </style>
 </head>
 <body>
@@ -40,10 +41,106 @@ const tests = [
   { id: 'momshealth', title: "Mom's Health", subtitle: 'Pregnancy & Postpartum', description: 'Body changes, recovery, and self-care', icon: '💜', color: '#9B59B6' },
 ];
 
+// Progress Ring Component
+function ProgressRing({ progress, size = 44, strokeWidth = 4, color }) {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const offset = circumference - (progress / 100) * circumference;
+  
+  return (
+    <svg width={size} height={size} className="progress-ring">
+      <circle
+        stroke="#E8E0F0"
+        fill="transparent"
+        strokeWidth={strokeWidth}
+        r={radius}
+        cx={size / 2}
+        cy={size / 2}
+      />
+      <circle
+        stroke={color}
+        fill="transparent"
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        r={radius}
+        cx={size / 2}
+        cy={size / 2}
+        style={{ strokeDasharray: circumference, strokeDashoffset: offset, transition: 'stroke-dashoffset 0.3s' }}
+      />
+    </svg>
+  );
+}
+
+// Due Date Countdown Component
+function DueDateCountdown({ dueDate, onEdit }) {
+  const today = new Date();
+  const due = new Date(dueDate);
+  const diffTime = due - today;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const diffWeeks = Math.floor(diffDays / 7);
+  const remainingDays = diffDays % 7;
+  
+  // Calculate current week of pregnancy (40 weeks total)
+  const conceptionDate = new Date(due);
+  conceptionDate.setDate(conceptionDate.getDate() - 280); // 40 weeks back
+  const pregnancyDays = Math.floor((today - conceptionDate) / (1000 * 60 * 60 * 24));
+  const currentWeek = Math.floor(pregnancyDays / 7);
+  const weekDay = pregnancyDays % 7;
+  
+  const isOverdue = diffDays < 0;
+  const isBorn = diffDays < -14; // Assume born if more than 2 weeks past due
+  
+  if (isBorn) {
+    return (
+      <div style={{ background: 'linear-gradient(135deg, #E8F8E8, #F0FFF0)', borderRadius: 16, padding: 16, marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <span style={{ fontSize: 24, marginRight: 8 }}>👶</span>
+            <span style={{ fontSize: 15, fontWeight: 600, color: '#4A3F55' }}>Baby is here!</span>
+          </div>
+          <button onClick={onEdit} style={{ background: 'none', border: 'none', fontSize: 13, color: '#7BC67B', cursor: 'pointer' }}>Update</button>
+        </div>
+      </div>
+    );
+  }
+  
+  return (
+    <div style={{ background: 'linear-gradient(135deg, #FFF0F7, #F5F0FF)', borderRadius: 16, padding: 16, marginBottom: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+        <span style={{ fontSize: 14, fontWeight: 600, color: '#8B7E9B' }}>
+          {isOverdue ? '🎉 Any day now!' : `📅 Week ${currentWeek}${weekDay > 0 ? ` + ${weekDay}d` : ''}`}
+        </span>
+        <button onClick={onEdit} style={{ background: 'none', border: 'none', fontSize: 13, color: '#B57EDC', cursor: 'pointer' }}>Edit</button>
+      </div>
+      {!isOverdue ? (
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+          <span style={{ fontSize: 32, fontWeight: 800, color: '#9B59B6' }}>{diffWeeks}</span>
+          <span style={{ fontSize: 14, color: '#8B7E9B', marginRight: 8 }}>weeks</span>
+          <span style={{ fontSize: 24, fontWeight: 700, color: '#B57EDC' }}>{remainingDays}</span>
+          <span style={{ fontSize: 14, color: '#8B7E9B' }}>days to go</span>
+        </div>
+      ) : (
+        <div style={{ fontSize: 16, fontWeight: 600, color: '#9B59B6' }}>
+          {Math.abs(diffDays)} days past due date
+        </div>
+      )}
+      <div style={{ marginTop: 10, height: 6, background: '#E8E0F0', borderRadius: 6, overflow: 'hidden' }}>
+        <div style={{ height: '100%', background: 'linear-gradient(90deg, #FF9AAB, #9B59B6)', borderRadius: 6, width: `${Math.min(100, (currentWeek / 40) * 100)}%` }} />
+      </div>
+      <div style={{ marginTop: 6, fontSize: 12, color: '#B8A9C9', textAlign: 'right' }}>
+        Due: {due.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const [user, setUser] = React.useState(null);
   const [authLoading, setAuthLoading] = React.useState(true);
   const [userStats, setUserStats] = React.useState({});
+  const [dueDate, setDueDate] = React.useState(null);
+  const [showDueDateInput, setShowDueDateInput] = React.useState(false);
+  const [dueDateInput, setDueDateInput] = React.useState('');
   const [screen, setScreen] = React.useState('select');
   const [selectedTest, setSelectedTest] = React.useState(null);
   const [questions, setQuestions] = React.useState([]);
@@ -57,32 +154,47 @@ function App() {
       setUser(user);
       setAuthLoading(false);
       if (user) {
-        loadUserStats(user.uid);
+        loadUserData(user.uid);
       }
     });
     return () => unsubscribe();
   }, []);
 
-  const loadUserStats = async (uid) => {
+  const loadUserData = async (uid) => {
     try {
       const doc = await db.collection('users').doc(uid).get();
       if (doc.exists) {
-        setUserStats(doc.data().stats || {});
+        const data = doc.data();
+        setUserStats(data.stats || {});
+        if (data.dueDate) {
+          setDueDate(data.dueDate);
+        }
       }
     } catch (e) {
-      console.error('Error loading stats:', e);
+      console.error('Error loading data:', e);
     }
   };
 
-  const saveQuizResult = async (testId, score, total) => {
+  const saveDueDate = async () => {
+    if (!user || !dueDateInput) return;
+    try {
+      await db.collection('users').doc(user.uid).set({ dueDate: dueDateInput }, { merge: true });
+      setDueDate(dueDateInput);
+      setShowDueDateInput(false);
+    } catch (e) {
+      console.error('Error saving due date:', e);
+    }
+  };
+
+  const saveQuizResult = async (testId, finalScore, total) => {
     if (!user) return;
     try {
       const userRef = db.collection('users').doc(user.uid);
       const result = {
         testId,
-        score,
+        score: finalScore,
         total,
-        percentage: Math.round((score / total) * 100),
+        percentage: Math.round((finalScore / total) * 100),
         completedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
       
@@ -90,16 +202,20 @@ function App() {
       
       const doc = await userRef.get();
       const currentStats = doc.exists ? (doc.data().stats || {}) : {};
-      const testStats = currentStats[testId] || { attempts: 0, bestScore: 0, lastScore: 0 };
+      const testStats = currentStats[testId] || { attempts: 0, bestScore: 0, lastScore: 0, totalCorrect: 0, totalAnswered: 0 };
       
       const newStats = {
         ...currentStats,
         [testId]: {
           attempts: testStats.attempts + 1,
           bestScore: Math.max(testStats.bestScore, result.percentage),
-          lastScore: result.percentage
+          lastScore: result.percentage,
+          totalCorrect: testStats.totalCorrect + finalScore,
+          totalAnswered: testStats.totalAnswered + total
         },
         totalQuizzes: (currentStats.totalQuizzes || 0) + 1,
+        totalCorrect: (currentStats.totalCorrect || 0) + finalScore,
+        totalAnswered: (currentStats.totalAnswered || 0) + total,
         lastPlayed: new Date().toISOString()
       };
       
@@ -123,6 +239,7 @@ function App() {
     try {
       await auth.signOut();
       setUserStats({});
+      setDueDate(null);
     } catch (e) {
       console.error('Sign out error:', e);
     }
@@ -151,7 +268,8 @@ function App() {
       setSelected(null);
       setShowResult(false);
     } else {
-      saveQuizResult(selectedTest.id, score + (selected === questions[currentQ].correct ? 1 : 0), questions.length);
+      const finalScore = score + (selected === questions[currentQ].correct ? 1 : 0);
+      saveQuizResult(selectedTest.id, finalScore, questions.length);
       setScreen('results');
     }
   };
@@ -159,6 +277,19 @@ function App() {
   const backToSelect = () => {
     setScreen('select');
     setSelectedTest(null);
+  };
+
+  // Calculate mastery percentage for a test
+  const getMastery = (testId) => {
+    const stats = userStats[testId];
+    if (!stats || stats.totalAnswered === 0) return 0;
+    return Math.round((stats.totalCorrect / stats.totalAnswered) * 100);
+  };
+
+  // Calculate overall progress
+  const getOverallProgress = () => {
+    const testsWithAttempts = tests.filter(t => userStats[t.id]?.attempts > 0).length;
+    return Math.round((testsWithAttempts / tests.length) * 100);
   };
 
   if (authLoading) {
@@ -201,7 +332,44 @@ function App() {
     );
   }
 
+  // Due Date Input Modal
+  if (showDueDateInput) {
+    return (
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #FFF5F5 0%, #FFF0F7 50%, #F5F0FF 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+        <span style={{ fontSize: 48, marginBottom: 16 }}>📅</span>
+        <h2 style={{ fontSize: 22, fontWeight: 700, color: '#4A3F55', marginBottom: 8 }}>When is baby due?</h2>
+        <p style={{ fontSize: 14, color: '#8B7E9B', marginBottom: 24, textAlign: 'center' }}>We'll show you a countdown and track your pregnancy week</p>
+        
+        <input
+          type="date"
+          value={dueDateInput}
+          onChange={(e) => setDueDateInput(e.target.value)}
+          style={{
+            padding: '16px 20px', fontSize: 18, borderRadius: 12, border: '2px solid #E0D6E9',
+            marginBottom: 16, width: '100%', maxWidth: 280, textAlign: 'center'
+          }}
+        />
+        
+        <div style={{ display: 'flex', gap: 12, width: '100%', maxWidth: 280 }}>
+          <button onClick={() => setShowDueDateInput(false)} style={{
+            flex: 1, padding: '14px', background: 'transparent', border: '2px solid #E0D6E9',
+            borderRadius: 12, color: '#8B7E9B', fontSize: 15, fontWeight: 600, cursor: 'pointer'
+          }}>Skip</button>
+          <button onClick={saveDueDate} disabled={!dueDateInput} style={{
+            flex: 1, padding: '14px', background: dueDateInput ? 'linear-gradient(135deg, #9B59B6, #B57EDC)' : '#E0D6E9',
+            border: 'none', borderRadius: 12, color: '#fff', fontSize: 15, fontWeight: 600, cursor: dueDateInput ? 'pointer' : 'default'
+          }}>Save</button>
+        </div>
+      </div>
+    );
+  }
+
   if (screen === 'select') {
+    const overallProgress = getOverallProgress();
+    const totalCorrect = userStats.totalCorrect || 0;
+    const totalAnswered = userStats.totalAnswered || 0;
+    const overallAccuracy = totalAnswered > 0 ? Math.round((totalCorrect / totalAnswered) * 100) : 0;
+    
     return (
       <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #FFF5F5 0%, #FFF0F7 50%, #F5F0FF 100%)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #F0E6F5' }}>
@@ -212,45 +380,94 @@ function App() {
           <button onClick={signOut} style={{ background: 'none', border: 'none', fontSize: 13, color: '#B8A9C9', cursor: 'pointer' }}>Sign out</button>
         </div>
         
-        <div style={{ textAlign: 'center', padding: '20px 20px 12px' }}>
-          <span style={{ fontSize: 36 }}>👶</span>
-          <h1 style={{ fontSize: 22, fontWeight: 800, color: '#4A3F55', margin: '6px 0' }}>New Parent Quiz</h1>
-          {userStats.totalQuizzes > 0 && (
-            <p style={{ fontSize: 13, color: '#7BC67B', fontWeight: 600 }}>
-              🎯 {userStats.totalQuizzes} quiz{userStats.totalQuizzes !== 1 ? 'zes' : ''} completed
-            </p>
+        <div style={{ padding: '16px 20px' }}>
+          {/* Due Date Section */}
+          {dueDate ? (
+            <DueDateCountdown dueDate={dueDate} onEdit={() => { setDueDateInput(dueDate); setShowDueDateInput(true); }} />
+          ) : (
+            <button onClick={() => setShowDueDateInput(true)} style={{
+              width: '100%', padding: 16, background: 'linear-gradient(135deg, #FFF0F7, #F5F0FF)',
+              border: '2px dashed #D8C8E8', borderRadius: 16, marginBottom: 16, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
+            }}>
+              <span style={{ fontSize: 20 }}>📅</span>
+              <span style={{ fontSize: 14, fontWeight: 600, color: '#9B59B6' }}>Add your due date</span>
+            </button>
           )}
-        </div>
-        
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '0 16px 20px', maxWidth: 500, margin: '0 auto' }}>
-          {tests.map((test) => {
-            const stats = userStats[test.id];
-            return (
-              <button key={test.id} onClick={() => startTest(test)} style={{
-                background: '#fff', borderRadius: 16, padding: '16px', border: `2px solid ${test.color}`,
-                cursor: 'pointer', textAlign: 'left', boxShadow: '0 3px 10px rgba(0,0,0,0.06)', width: '100%',
-                display: 'flex', alignItems: 'center', gap: 14
-              }}>
-                <div style={{ width: 48, height: 48, borderRadius: '50%', background: `${test.color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <span style={{ fontSize: 24 }}>{test.icon}</span>
+          
+          {/* Overall Progress Card */}
+          <div style={{ background: '#fff', borderRadius: 16, padding: 16, marginBottom: 16, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <h3 style={{ fontSize: 14, fontWeight: 600, color: '#8B7E9B', marginBottom: 4 }}>Your Progress</h3>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                  <span style={{ fontSize: 28, fontWeight: 800, color: '#4A3F55' }}>{overallAccuracy}%</span>
+                  <span style={{ fontSize: 13, color: '#B8A9C9' }}>accuracy</span>
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <h2 style={{ fontSize: 16, fontWeight: 700, color: '#4A3F55', margin: 0 }}>{test.title}</h2>
-                  <p style={{ fontSize: 12, color: '#8B7E9B', margin: '2px 0 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{test.description}</p>
-                  {stats && (
-                    <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
-                      <span style={{ fontSize: 11, color: '#7BC67B', fontWeight: 600 }}>Best: {stats.bestScore}%</span>
-                      <span style={{ fontSize: 11, color: '#8B7E9B' }}>×{stats.attempts}</span>
+                <p style={{ fontSize: 12, color: '#B8A9C9', marginTop: 4 }}>
+                  {totalCorrect}/{totalAnswered} correct • {userStats.totalQuizzes || 0} quizzes
+                </p>
+              </div>
+              <div style={{ position: 'relative', width: 60, height: 60 }}>
+                <ProgressRing progress={overallProgress} size={60} strokeWidth={5} color="#7BC67B" />
+                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(0deg)', fontSize: 14, fontWeight: 700, color: '#4A3F55' }}>
+                  {tests.filter(t => userStats[t.id]?.attempts > 0).length}/{tests.length}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Tests List */}
+          <h2 style={{ fontSize: 16, fontWeight: 700, color: '#4A3F55', marginBottom: 12 }}>Topics</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {tests.map((test) => {
+              const stats = userStats[test.id];
+              const mastery = getMastery(test.id);
+              const hasAttempted = stats?.attempts > 0;
+              
+              return (
+                <button key={test.id} onClick={() => startTest(test)} style={{
+                  background: '#fff', borderRadius: 14, padding: '14px', border: 'none',
+                  cursor: 'pointer', textAlign: 'left', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', width: '100%',
+                  display: 'flex', alignItems: 'center', gap: 12
+                }}>
+                  {/* Progress Ring with Icon */}
+                  <div style={{ position: 'relative', width: 48, height: 48, flexShrink: 0 }}>
+                    <ProgressRing progress={mastery} size={48} strokeWidth={4} color={test.color} />
+                    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(0deg)', fontSize: 20 }}>
+                      {test.icon}
                     </div>
-                  )}
-                </div>
-                <span style={{ fontSize: 18, color: '#C9A0DC' }}>→</span>
-              </button>
-            );
-          })}
+                  </div>
+                  
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <h3 style={{ fontSize: 15, fontWeight: 700, color: '#4A3F55', margin: 0 }}>{test.title}</h3>
+                      {hasAttempted && (
+                        <span style={{ fontSize: 11, fontWeight: 600, color: test.color, background: `${test.color}20`, padding: '2px 6px', borderRadius: 6 }}>
+                          {mastery}%
+                        </span>
+                      )}
+                    </div>
+                    <p style={{ fontSize: 12, color: '#8B7E9B', margin: '2px 0 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {test.description}
+                    </p>
+                    {hasAttempted && (
+                      <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                        <span style={{ fontSize: 11, color: '#7BC67B' }}>Best: {stats.bestScore}%</span>
+                        <span style={{ fontSize: 11, color: '#B8A9C9' }}>•</span>
+                        <span style={{ fontSize: 11, color: '#B8A9C9' }}>{stats.attempts} attempt{stats.attempts !== 1 ? 's' : ''}</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <span style={{ fontSize: 16, color: '#C9A0DC' }}>→</span>
+                </button>
+              );
+            })}
+          </div>
+          
+          <p style={{ textAlign: 'center', padding: '16px', fontSize: 12, color: '#B8A9C9' }}>250 questions across 5 topics</p>
         </div>
-        
-        <p style={{ textAlign: 'center', padding: '8px 16px 20px', fontSize: 12, color: '#B8A9C9' }}>250 questions across 5 topics</p>
       </div>
     );
   }
@@ -320,7 +537,8 @@ function App() {
     const emoji = pct >= 90 ? '🌟' : pct >= 80 ? '👏' : pct >= 70 ? '📚' : pct >= 60 ? '💪' : '🌱';
     const msg = pct >= 90 ? "Outstanding!" : pct >= 80 ? "Great job!" : pct >= 70 ? "Good work!" : pct >= 60 ? "Keep learning!" : "Keep studying!";
     const prevBest = userStats[selectedTest.id]?.bestScore || 0;
-    const isNewBest = pct > prevBest || (userStats[selectedTest.id]?.attempts === 1);
+    const isNewBest = pct > prevBest;
+    const mastery = getMastery(selectedTest.id);
     
     return (
       <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #FFF5F5 0%, #FFF0F7 50%, #F5F0FF 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, textAlign: 'center' }}>
@@ -336,7 +554,8 @@ function App() {
           <span style={{ fontSize: 32, color: '#C9A0DC' }}>/</span>
           <span style={{ fontSize: 32, fontWeight: 600, color: '#8B7E9B' }}>{questions.length}</span>
         </div>
-        <p style={{ fontSize: 20, fontWeight: 600, color: '#B57EDC', marginBottom: 16 }}>{pct}%</p>
+        <p style={{ fontSize: 20, fontWeight: 600, color: '#B57EDC', marginBottom: 8 }}>{pct}%</p>
+        <p style={{ fontSize: 14, color: '#8B7E9B', marginBottom: 24 }}>Overall mastery: {mastery}%</p>
         <p style={{ fontSize: 18, color: '#6B5B7A', marginBottom: 32 }}>{msg}</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', maxWidth: 300 }}>
           <button onClick={() => startTest(selectedTest)} style={{ padding: '18px 48px', background: `linear-gradient(135deg, ${selectedTest.color}, ${selectedTest.color}CC)`, border: 'none', borderRadius: 16, color: '#fff', fontSize: 17, fontWeight: 700, cursor: 'pointer' }}>Try Again</button>
