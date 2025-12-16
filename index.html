@@ -140,6 +140,7 @@ function DueDateCountdown({ dueDate, onEdit }) {
 
 function App() {
   const [user, setUser] = React.useState(null);
+  const [guestMode, setGuestMode] = React.useState(false);
   const [authLoading, setAuthLoading] = React.useState(true);
   const [userStats, setUserStats] = React.useState({});
   const [masteredQuestions, setMasteredQuestions] = React.useState({});
@@ -264,9 +265,17 @@ function App() {
     }
   };
 
+  const continueAsGuest = () => {
+    setGuestMode(true);
+  };
+
   const signOut = async () => {
     try {
-      await auth.signOut();
+      if (guestMode) {
+        setGuestMode(false);
+      } else {
+        await auth.signOut();
+      }
       setUserStats({});
       setMasteredQuestions({});
       setDueDate(null);
@@ -354,7 +363,7 @@ function App() {
     );
   }
 
-  if (!user) {
+  if (!user && !guestMode) {
     return (
       <div className="screen" style={{ background: 'linear-gradient(180deg, #FFF5F5 0%, #FFF0F7 50%, #F5F0FF 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
         <span style={{ fontSize: 64, marginBottom: 16 }}>👶</span>
@@ -374,6 +383,9 @@ function App() {
           Sign in with Google
         </button>
         <p style={{ marginTop: 24, fontSize: 13, color: '#B8A9C9', textAlign: 'center' }}>Sign in to save your progress<br/>across devices</p>
+        <button onClick={continueAsGuest} style={{ marginTop: 16, background: 'none', border: 'none', fontSize: 13, color: '#B8A9C9', cursor: 'pointer', textDecoration: 'underline' }}>
+          Try without an account
+        </button>
       </div>
     );
   }
@@ -403,10 +415,15 @@ function App() {
       <div className="screen" style={{ background: 'linear-gradient(180deg, #FFF5F5 0%, #FFF0F7 50%, #F5F0FF 100%)', paddingBottom: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #F0E6F5' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            {user.photoURL && <img src={user.photoURL} alt="" style={{ width: 32, height: 32, borderRadius: '50%' }} />}
-            <span style={{ fontSize: 14, color: '#6B5B7A', fontWeight: 500 }}>{user.displayName?.split(' ')[0]}</span>
+            {user?.photoURL && <img src={user.photoURL} alt="" style={{ width: 32, height: 32, borderRadius: '50%' }} />}
+            {!user && guestMode && <span style={{ fontSize: 24 }}>👤</span>}
+            <span style={{ fontSize: 14, color: '#6B5B7A', fontWeight: 500 }}>{user ? user.displayName?.split(' ')[0] : 'Guest'}</span>
           </div>
-          <button onClick={signOut} style={{ background: 'none', border: 'none', fontSize: 13, color: '#B8A9C9', cursor: 'pointer' }}>Sign out</button>
+          {guestMode ? (
+            <button onClick={signInWithGoogle} style={{ background: 'none', border: 'none', fontSize: 13, color: '#9B59B6', cursor: 'pointer', fontWeight: 500 }}>Sign in to save</button>
+          ) : (
+            <button onClick={signOut} style={{ background: 'none', border: 'none', fontSize: 13, color: '#B8A9C9', cursor: 'pointer' }}>Sign out</button>
+          )}
         </div>
         
         <div style={{ padding: '16px 20px' }}>
