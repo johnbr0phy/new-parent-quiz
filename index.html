@@ -7,6 +7,9 @@
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: system-ui, -apple-system, sans-serif; }
@@ -14,6 +17,20 @@
 </head>
 <body>
   <div id="root"></div>
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyAZG0hKLm6tHdj7xVeZ0kmvgmuAir6dJY4",
+      authDomain: "new-parent-quiz.firebaseapp.com",
+      projectId: "new-parent-quiz",
+      storageBucket: "new-parent-quiz.firebasestorage.app",
+      messagingSenderId: "249815878616",
+      appId: "1:249815878616:web:fd689310b67f622f47c0ad"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+  </script>
   <script type="text/babel">
 const allQuestions = {
   "newborn": [
@@ -2425,7 +2442,6 @@ const allQuestions = {
     }
   ]
 };
-
 const tests = [
   { id: 'newborn', title: 'Newborn Basics', subtitle: '0-3 Months', description: 'Sleep, feeding, cord care, and early health signs', icon: '👶', color: '#FF9AAB' },
   { id: 'development', title: 'Baby Development', subtitle: '3-12 Months', description: 'Milestones, motor skills, and cognitive growth', icon: '🌱', color: '#7BC67B' },
@@ -2434,6 +2450,9 @@ const tests = [
 ];
 
 function App() {
+  const [user, setUser] = React.useState(null);
+  const [authLoading, setAuthLoading] = React.useState(true);
+  const [userStats, setUserStats] = React.useState({});
   const [screen, setScreen] = React.useState('select');
   const [selectedTest, setSelectedTest] = React.useState(null);
   const [questions, setQuestions] = React.useState([]);
@@ -2441,6 +2460,89 @@ function App() {
   const [selected, setSelected] = React.useState(null);
   const [showResult, setShowResult] = React.useState(false);
   const [score, setScore] = React.useState(0);
+
+  // Listen for auth state changes
+  React.useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      setUser(user);
+      setAuthLoading(false);
+      if (user) {
+        loadUserStats(user.uid);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Load user stats from Firestore
+  const loadUserStats = async (uid) => {
+    try {
+      const doc = await db.collection('users').doc(uid).get();
+      if (doc.exists) {
+        setUserStats(doc.data().stats || {});
+      }
+    } catch (e) {
+      console.error('Error loading stats:', e);
+    }
+  };
+
+  // Save quiz result to Firestore
+  const saveQuizResult = async (testId, score, total) => {
+    if (!user) return;
+    try {
+      const userRef = db.collection('users').doc(user.uid);
+      const result = {
+        testId,
+        score,
+        total,
+        percentage: Math.round((score / total) * 100),
+        completedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      
+      // Add to results subcollection
+      await userRef.collection('results').add(result);
+      
+      // Update stats
+      const doc = await userRef.get();
+      const currentStats = doc.exists ? (doc.data().stats || {}) : {};
+      const testStats = currentStats[testId] || { attempts: 0, bestScore: 0, lastScore: 0 };
+      
+      const newStats = {
+        ...currentStats,
+        [testId]: {
+          attempts: testStats.attempts + 1,
+          bestScore: Math.max(testStats.bestScore, result.percentage),
+          lastScore: result.percentage
+        },
+        totalQuizzes: (currentStats.totalQuizzes || 0) + 1,
+        lastPlayed: new Date().toISOString()
+      };
+      
+      await userRef.set({ stats: newStats }, { merge: true });
+      setUserStats(newStats);
+    } catch (e) {
+      console.error('Error saving result:', e);
+    }
+  };
+
+  // Sign in with Google
+  const signInWithGoogle = async () => {
+    try {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      await auth.signInWithPopup(provider);
+    } catch (e) {
+      console.error('Sign in error:', e);
+    }
+  };
+
+  // Sign out
+  const signOut = async () => {
+    try {
+      await auth.signOut();
+      setUserStats({});
+    } catch (e) {
+      console.error('Sign out error:', e);
+    }
+  };
 
   const startTest = (test) => {
     setSelectedTest(test);
@@ -2465,6 +2567,8 @@ function App() {
       setSelected(null);
       setShowResult(false);
     } else {
+      // Save result before showing results screen
+      saveQuizResult(selectedTest.id, score + (selected === questions[currentQ].correct ? 1 : 0), questions.length);
       setScreen('results');
     }
   };
@@ -2474,54 +2578,121 @@ function App() {
     setSelectedTest(null);
   };
 
-  if (screen === 'select') {
+  // AUTH LOADING SCREEN
+  if (authLoading) {
     return (
-      <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #FFF5F5 0%, #FFF0F7 50%, #F5F0FF 100%)' }}>
-        <div style={{ textAlign: 'center', padding: '40px 20px 24px' }}>
-          <span style={{ fontSize: 48 }}>👶</span>
-          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#4A3F55', margin: '8px 0' }}>New Parent Quiz</h1>
-          <p style={{ fontSize: 16, color: '#8B7E9B' }}>Test your parenting knowledge</p>
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #FFF5F5 0%, #FFF0F7 50%, #F5F0FF 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center' }}>
+          <span style={{ fontSize: 48, display: 'block', marginBottom: 16 }}>👶</span>
+          <p style={{ color: '#8B7E9B' }}>Loading...</p>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '0 20px', maxWidth: 500, margin: '0 auto' }}>
-          {tests.map((test) => (
-            <button key={test.id} onClick={() => startTest(test)} style={{
-              background: '#fff', borderRadius: 20, padding: 24, border: `2px solid ${test.color}`,
-              cursor: 'pointer', textAlign: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.06)', width: '100%'
-            }}>
-              <div style={{ width: 64, height: 64, borderRadius: '50%', background: `${test.color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                <span style={{ fontSize: 32 }}>{test.icon}</span>
-              </div>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#4A3F55', margin: 0 }}>{test.title}</h2>
-              <span style={{ fontSize: 13, fontWeight: 600, color: test.color }}>{test.subtitle}</span>
-              <p style={{ fontSize: 14, color: '#6B5B7A', margin: '12px 0', lineHeight: 1.4 }}>{test.description}</p>
-              <span style={{ fontSize: 13, color: '#8B7E9B', background: '#F5F0FF', padding: '6px 12px', borderRadius: 12 }}>
-                {allQuestions[test.id].length} questions
-              </span>
-            </button>
-          ))}
-        </div>
-        <p style={{ textAlign: 'center', padding: 32, fontSize: 14, color: '#8B7E9B' }}>200 questions across 4 topics</p>
       </div>
     );
   }
 
+  // LOGIN SCREEN
+  if (!user) {
+    return (
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #FFF5F5 0%, #FFF0F7 50%, #F5F0FF 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+        <span style={{ fontSize: 64, marginBottom: 16 }}>👶</span>
+        <h1 style={{ fontSize: 28, fontWeight: 800, color: '#4A3F55', marginBottom: 8 }}>New Parent Quiz</h1>
+        <p style={{ fontSize: 16, color: '#8B7E9B', marginBottom: 32, textAlign: 'center' }}>Test your parenting knowledge<br/>and track your progress</p>
+        
+        <button onClick={signInWithGoogle} style={{
+          display: 'flex', alignItems: 'center', gap: 12, padding: '16px 32px',
+          background: '#fff', border: '2px solid #E0D6E9', borderRadius: 16,
+          fontSize: 16, fontWeight: 600, color: '#4A3F55', cursor: 'pointer',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
+        }}>
+          <svg width="20" height="20" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          Sign in with Google
+        </button>
+        
+        <p style={{ marginTop: 24, fontSize: 13, color: '#B8A9C9', textAlign: 'center' }}>
+          Sign in to save your progress<br/>across devices
+        </p>
+      </div>
+    );
+  }
+
+  // SELECTION SCREEN
+  if (screen === 'select') {
+    return (
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #FFF5F5 0%, #FFF0F7 50%, #F5F0FF 100%)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #F0E6F5' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {user.photoURL && <img src={user.photoURL} alt="" style={{ width: 32, height: 32, borderRadius: '50%' }} />}
+            <span style={{ fontSize: 14, color: '#6B5B7A', fontWeight: 500 }}>{user.displayName?.split(' ')[0]}</span>
+          </div>
+          <button onClick={signOut} style={{ background: 'none', border: 'none', fontSize: 13, color: '#B8A9C9', cursor: 'pointer' }}>Sign out</button>
+        </div>
+        
+        <div style={{ textAlign: 'center', padding: '24px 20px 16px' }}>
+          <span style={{ fontSize: 40 }}>👶</span>
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: '#4A3F55', margin: '8px 0' }}>New Parent Quiz</h1>
+          {userStats.totalQuizzes > 0 && (
+            <p style={{ fontSize: 14, color: '#7BC67B', fontWeight: 600 }}>
+              🎯 {userStats.totalQuizzes} quiz{userStats.totalQuizzes !== 1 ? 'zes' : ''} completed
+            </p>
+          )}
+        </div>
+        
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: '0 20px', maxWidth: 500, margin: '0 auto' }}>
+          {tests.map((test) => {
+            const stats = userStats[test.id];
+            return (
+              <button key={test.id} onClick={() => startTest(test)} style={{
+                background: '#fff', borderRadius: 18, padding: '20px', border: `2px solid ${test.color}`,
+                cursor: 'pointer', textAlign: 'left', boxShadow: '0 4px 12px rgba(0,0,0,0.06)', width: '100%',
+                display: 'flex', alignItems: 'center', gap: 16
+              }}>
+                <div style={{ width: 56, height: 56, borderRadius: '50%', background: `${test.color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <span style={{ fontSize: 28 }}>{test.icon}</span>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <h2 style={{ fontSize: 18, fontWeight: 700, color: '#4A3F55', margin: 0 }}>{test.title}</h2>
+                  <p style={{ fontSize: 13, color: '#8B7E9B', margin: '4px 0 0' }}>{test.description}</p>
+                  {stats && (
+                    <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
+                      <span style={{ fontSize: 12, color: '#7BC67B', fontWeight: 600 }}>Best: {stats.bestScore}%</span>
+                      <span style={{ fontSize: 12, color: '#8B7E9B' }}>Attempts: {stats.attempts}</span>
+                    </div>
+                  )}
+                </div>
+                <span style={{ fontSize: 20, color: '#C9A0DC' }}>→</span>
+              </button>
+            );
+          })}
+        </div>
+        
+        <p style={{ textAlign: 'center', padding: 24, fontSize: 13, color: '#B8A9C9' }}>50 questions per quiz</p>
+      </div>
+    );
+  }
+
+  // QUIZ SCREEN
   if (screen === 'quiz') {
     const q = questions[currentQ];
     return (
       <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #FFF5F5 0%, #FFF0F7 50%, #F5F0FF 100%)', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ background: `linear-gradient(135deg, ${selectedTest.color}, ${selectedTest.color}CC)`, padding: '10px 16px 12px', borderRadius: '0 0 20px 20px' }}>
+        <div style={{ background: `linear-gradient(135deg, ${selectedTest.color}, ${selectedTest.color}CC)`, padding: '12px 16px 14px', borderRadius: '0 0 20px 20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <button onClick={backToSelect} style={{ background: 'rgba(255,255,255,0.3)', border: 'none', borderRadius: 8, width: 32, height: 32, fontSize: 16, color: '#fff', cursor: 'pointer', flexShrink: 0 }}>←</button>
+            <button onClick={backToSelect} style={{ background: 'rgba(255,255,255,0.3)', border: 'none', borderRadius: 8, width: 36, height: 36, fontSize: 18, color: '#fff', cursor: 'pointer', flexShrink: 0 }}>←</button>
             <div style={{ flex: 1, height: 6, background: 'rgba(255,255,255,0.4)', borderRadius: 6, overflow: 'hidden' }}>
               <div style={{ height: '100%', background: '#fff', borderRadius: 6, width: `${((currentQ + 1) / questions.length) * 100}%`, transition: 'width 0.3s' }} />
             </div>
-            <span style={{ color: '#fff', fontSize: 13, fontWeight: 600, flexShrink: 0 }}>{currentQ + 1}/{questions.length}</span>
-            <span style={{ background: 'rgba(255,255,255,0.9)', color: '#4A3F55', padding: '4px 10px', borderRadius: 12, fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{score}✓</span>
+            <span style={{ color: '#fff', fontSize: 14, fontWeight: 600, flexShrink: 0 }}>{currentQ + 1}/{questions.length}</span>
+            <span style={{ background: 'rgba(255,255,255,0.9)', color: '#4A3F55', padding: '5px 12px', borderRadius: 12, fontSize: 13, fontWeight: 700, flexShrink: 0 }}>{score}✓</span>
           </div>
         </div>
-        <div style={{ flex: 1, padding: '16px 16px 16px', display: 'flex', flexDirection: 'column' }}>
-          <h2 style={{ fontSize: 18, fontWeight: 700, color: '#4A3F55', lineHeight: 1.35, marginBottom: 14 }}>{q.question}</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ flex: 1, padding: '20px 18px 20px', display: 'flex', flexDirection: 'column' }}>
+          <h2 style={{ fontSize: 19, fontWeight: 700, color: '#4A3F55', lineHeight: 1.4, marginBottom: 18 }}>{q.question}</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {q.options.map((opt, idx) => {
               let bg = '#fff', border = '#F0E6F5';
               if (showResult && idx === q.correct) { bg = '#E8F8E8'; border = '#7BC67B'; }
@@ -2529,30 +2700,30 @@ function App() {
               else if (showResult) { bg = '#fafafa'; border = '#eee'; }
               return (
                 <button key={idx} onClick={() => handleAnswer(idx)} disabled={showResult} style={{
-                  display: 'flex', alignItems: 'center', gap: 10, padding: '12px', background: bg,
-                  border: `2px solid ${border}`, borderRadius: 12, cursor: showResult ? 'default' : 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 12, padding: '14px', background: bg,
+                  border: `2px solid ${border}`, borderRadius: 14, cursor: showResult ? 'default' : 'pointer',
                   textAlign: 'left', width: '100%'
                 }}>
-                  <span style={{ width: 26, height: 26, borderRadius: 8, background: 'linear-gradient(135deg, #FFE4EC, #F5E6FF)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#B57EDC', fontSize: 12, flexShrink: 0 }}>
+                  <span style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg, #FFE4EC, #F5E6FF)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#B57EDC', fontSize: 13, flexShrink: 0 }}>
                     {String.fromCharCode(65 + idx)}
                   </span>
-                  <span style={{ flex: 1, fontSize: 16, fontWeight: 500, color: '#4A3F55', lineHeight: 1.3 }}>{opt}</span>
-                  {showResult && idx === q.correct && <span style={{ color: '#4CAF50', fontSize: 18, fontWeight: 700 }}>✓</span>}
-                  {showResult && idx === selected && idx !== q.correct && <span style={{ color: '#E57373', fontSize: 18, fontWeight: 700 }}>✗</span>}
+                  <span style={{ flex: 1, fontSize: 16, fontWeight: 500, color: '#4A3F55', lineHeight: 1.4 }}>{opt}</span>
+                  {showResult && idx === q.correct && <span style={{ color: '#4CAF50', fontSize: 20, fontWeight: 700 }}>✓</span>}
+                  {showResult && idx === selected && idx !== q.correct && <span style={{ color: '#E57373', fontSize: 20, fontWeight: 700 }}>✗</span>}
                 </button>
               );
             })}
           </div>
           {showResult && (
-            <div style={{ marginTop: 12, padding: 14, background: selected === q.correct ? '#E8F8E8' : '#FFF8E7', borderRadius: 12, border: `1px solid ${selected === q.correct ? '#7BC67B' : '#FFE4B5'}` }}>
-              <p style={{ fontSize: 13, color: '#5A5A5A', lineHeight: 1.5, margin: 0 }}>{q.explanation}</p>
+            <div style={{ marginTop: 16, padding: 16, background: selected === q.correct ? '#E8F8E8' : '#FFF8E7', borderRadius: 14, border: `1px solid ${selected === q.correct ? '#7BC67B' : '#FFE4B5'}` }}>
+              <p style={{ fontSize: 15, color: '#4A4A4A', lineHeight: 1.55, margin: 0 }}>{q.explanation}</p>
             </div>
           )}
           {showResult && (
             <button onClick={nextQuestion} style={{
-              marginTop: 12, padding: '14px 24px', width: '100%',
+              marginTop: 16, padding: '16px 24px', width: '100%',
               background: `linear-gradient(135deg, ${selectedTest.color}, ${selectedTest.color}CC)`,
-              border: 'none', borderRadius: 12, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer',
+              border: 'none', borderRadius: 14, color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.15)'
             }}>
               {currentQ < questions.length - 1 ? 'Next' : 'Results'} →
@@ -2563,21 +2734,27 @@ function App() {
     );
   }
 
+  // RESULTS SCREEN
   if (screen === 'results') {
-    const pct = Math.round((score / questions.length) * 100);
+    const finalScore = score;
+    const pct = Math.round((finalScore / questions.length) * 100);
     const grade = pct >= 90 ? 'A' : pct >= 80 ? 'B' : pct >= 70 ? 'C' : pct >= 60 ? 'D' : 'F';
     const emoji = pct >= 90 ? '🌟' : pct >= 80 ? '👏' : pct >= 70 ? '📚' : pct >= 60 ? '💪' : '🌱';
     const msg = pct >= 90 ? "Outstanding!" : pct >= 80 ? "Great job!" : pct >= 70 ? "Good work!" : pct >= 60 ? "Keep learning!" : "Keep studying!";
+    const isNewBest = userStats[selectedTest.id]?.bestScore === pct && userStats[selectedTest.id]?.attempts === 1 || 
+                      pct > (userStats[selectedTest.id]?.bestScore || 0);
+    
     return (
       <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #FFF5F5 0%, #FFF0F7 50%, #F5F0FF 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, textAlign: 'center' }}>
         <span style={{ fontSize: 64, marginBottom: 16 }}>{emoji}</span>
         <h1 style={{ fontSize: 24, fontWeight: 800, color: '#4A3F55', margin: '0 0 4px' }}>{selectedTest.title}</h1>
         <p style={{ fontSize: 16, color: '#8B7E9B', margin: '0 0 24px' }}>Quiz Complete!</p>
+        {isNewBest && <p style={{ fontSize: 14, color: '#F7B731', fontWeight: 700, margin: '-16px 0 16px' }}>🏆 New Best Score!</p>}
         <div style={{ width: 100, height: 100, borderRadius: '50%', background: `linear-gradient(135deg, ${selectedTest.color}, ${selectedTest.color}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20, boxShadow: '0 8px 32px rgba(0,0,0,0.15)' }}>
           <span style={{ fontSize: 48, fontWeight: 800, color: '#fff' }}>{grade}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 8 }}>
-          <span style={{ fontSize: 48, fontWeight: 800, color: '#4A3F55' }}>{score}</span>
+          <span style={{ fontSize: 48, fontWeight: 800, color: '#4A3F55' }}>{finalScore}</span>
           <span style={{ fontSize: 32, color: '#C9A0DC' }}>/</span>
           <span style={{ fontSize: 32, fontWeight: 600, color: '#8B7E9B' }}>{questions.length}</span>
         </div>
