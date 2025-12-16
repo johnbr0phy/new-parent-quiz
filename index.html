@@ -49,24 +49,9 @@ function ProgressRing({ progress, size = 44, strokeWidth = 4, color }) {
   
   return (
     <svg width={size} height={size} className="progress-ring">
-      <circle
-        stroke="#E8E0F0"
-        fill="transparent"
-        strokeWidth={strokeWidth}
-        r={radius}
-        cx={size / 2}
-        cy={size / 2}
-      />
-      <circle
-        stroke={color}
-        fill="transparent"
-        strokeWidth={strokeWidth}
-        strokeLinecap="round"
-        r={radius}
-        cx={size / 2}
-        cy={size / 2}
-        style={{ strokeDasharray: circumference, strokeDashoffset: offset, transition: 'stroke-dashoffset 0.3s' }}
-      />
+      <circle stroke="#E8E0F0" fill="transparent" strokeWidth={strokeWidth} r={radius} cx={size / 2} cy={size / 2} />
+      <circle stroke={color} fill="transparent" strokeWidth={strokeWidth} strokeLinecap="round" r={radius} cx={size / 2} cy={size / 2}
+        style={{ strokeDasharray: circumference, strokeDashoffset: offset, transition: 'stroke-dashoffset 0.3s' }} />
     </svg>
   );
 }
@@ -80,15 +65,14 @@ function DueDateCountdown({ dueDate, onEdit }) {
   const diffWeeks = Math.floor(diffDays / 7);
   const remainingDays = diffDays % 7;
   
-  // Calculate current week of pregnancy (40 weeks total)
   const conceptionDate = new Date(due);
-  conceptionDate.setDate(conceptionDate.getDate() - 280); // 40 weeks back
+  conceptionDate.setDate(conceptionDate.getDate() - 280);
   const pregnancyDays = Math.floor((today - conceptionDate) / (1000 * 60 * 60 * 24));
   const currentWeek = Math.floor(pregnancyDays / 7);
   const weekDay = pregnancyDays % 7;
   
   const isOverdue = diffDays < 0;
-  const isBorn = diffDays < -14; // Assume born if more than 2 weeks past due
+  const isBorn = diffDays < -14;
   
   if (isBorn) {
     return (
@@ -120,9 +104,7 @@ function DueDateCountdown({ dueDate, onEdit }) {
           <span style={{ fontSize: 14, color: '#8B7E9B' }}>days to go</span>
         </div>
       ) : (
-        <div style={{ fontSize: 16, fontWeight: 600, color: '#9B59B6' }}>
-          {Math.abs(diffDays)} days past due date
-        </div>
+        <div style={{ fontSize: 16, fontWeight: 600, color: '#9B59B6' }}>{Math.abs(diffDays)} days past due date</div>
       )}
       <div style={{ marginTop: 10, height: 6, background: '#E8E0F0', borderRadius: 6, overflow: 'hidden' }}>
         <div style={{ height: '100%', background: 'linear-gradient(90deg, #FF9AAB, #9B59B6)', borderRadius: 6, width: `${Math.min(100, (currentWeek / 40) * 100)}%` }} />
@@ -138,6 +120,7 @@ function App() {
   const [user, setUser] = React.useState(null);
   const [authLoading, setAuthLoading] = React.useState(true);
   const [userStats, setUserStats] = React.useState({});
+  const [masteredQuestions, setMasteredQuestions] = React.useState({});
   const [dueDate, setDueDate] = React.useState(null);
   const [showDueDateInput, setShowDueDateInput] = React.useState(false);
   const [dueDateInput, setDueDateInput] = React.useState('');
@@ -148,6 +131,7 @@ function App() {
   const [selected, setSelected] = React.useState(null);
   const [showResult, setShowResult] = React.useState(false);
   const [score, setScore] = React.useState(0);
+  const [sessionMastered, setSessionMastered] = React.useState([]);
 
   React.useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
@@ -166,9 +150,8 @@ function App() {
       if (doc.exists) {
         const data = doc.data();
         setUserStats(data.stats || {});
-        if (data.dueDate) {
-          setDueDate(data.dueDate);
-        }
+        setMasteredQuestions(data.mastered || {});
+        if (data.dueDate) setDueDate(data.dueDate);
       }
     } catch (e) {
       console.error('Error loading data:', e);
@@ -186,14 +169,29 @@ function App() {
     }
   };
 
+  const saveMasteredQuestion = async (testId, questionId) => {
+    if (!user) return;
+    try {
+      const currentMastered = masteredQuestions[testId] || [];
+      if (currentMastered.includes(questionId)) return;
+      
+      const newMastered = {
+        ...masteredQuestions,
+        [testId]: [...currentMastered, questionId]
+      };
+      setMasteredQuestions(newMastered);
+      await db.collection('users').doc(user.uid).set({ mastered: newMastered }, { merge: true });
+    } catch (e) {
+      console.error('Error saving mastered question:', e);
+    }
+  };
+
   const saveQuizResult = async (testId, finalScore, total) => {
     if (!user) return;
     try {
       const userRef = db.collection('users').doc(user.uid);
       const result = {
-        testId,
-        score: finalScore,
-        total,
+        testId, score: finalScore, total,
         percentage: Math.round((finalScore / total) * 100),
         completedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
@@ -202,20 +200,16 @@ function App() {
       
       const doc = await userRef.get();
       const currentStats = doc.exists ? (doc.data().stats || {}) : {};
-      const testStats = currentStats[testId] || { attempts: 0, bestScore: 0, lastScore: 0, totalCorrect: 0, totalAnswered: 0 };
+      const testStats = currentStats[testId] || { attempts: 0, bestScore: 0, lastScore: 0 };
       
       const newStats = {
         ...currentStats,
         [testId]: {
           attempts: testStats.attempts + 1,
           bestScore: Math.max(testStats.bestScore, result.percentage),
-          lastScore: result.percentage,
-          totalCorrect: testStats.totalCorrect + finalScore,
-          totalAnswered: testStats.totalAnswered + total
+          lastScore: result.percentage
         },
         totalQuizzes: (currentStats.totalQuizzes || 0) + 1,
-        totalCorrect: (currentStats.totalCorrect || 0) + finalScore,
-        totalAnswered: (currentStats.totalAnswered || 0) + total,
         lastPlayed: new Date().toISOString()
       };
       
@@ -239,27 +233,46 @@ function App() {
     try {
       await auth.signOut();
       setUserStats({});
+      setMasteredQuestions({});
       setDueDate(null);
     } catch (e) {
       console.error('Sign out error:', e);
     }
   };
 
-  const startTest = (test) => {
+  const startTest = (test, practiceAll = false) => {
+    const mastered = masteredQuestions[test.id] || [];
+    let availableQuestions = allQuestions[test.id];
+    
+    if (!practiceAll) {
+      availableQuestions = availableQuestions.filter(q => !mastered.includes(q.id));
+    }
+    
+    if (availableQuestions.length === 0) {
+      alert('You\'ve mastered all questions in this topic! Starting full practice mode.');
+      availableQuestions = allQuestions[test.id];
+    }
+    
     setSelectedTest(test);
-    setQuestions([...allQuestions[test.id]].sort(() => Math.random() - 0.5));
+    setQuestions([...availableQuestions].sort(() => Math.random() - 0.5));
     setScreen('quiz');
     setCurrentQ(0);
     setScore(0);
     setSelected(null);
     setShowResult(false);
+    setSessionMastered([]);
   };
 
   const handleAnswer = (idx) => {
     if (showResult) return;
     setSelected(idx);
     setShowResult(true);
-    if (idx === questions[currentQ].correct) setScore(s => s + 1);
+    const q = questions[currentQ];
+    if (idx === q.correct) {
+      setScore(s => s + 1);
+      saveMasteredQuestion(selectedTest.id, q.id);
+      setSessionMastered(prev => [...prev, q.id]);
+    }
   };
 
   const nextQuestion = () => {
@@ -279,18 +292,21 @@ function App() {
     setSelectedTest(null);
   };
 
-  // Calculate mastery percentage for a test
-  const getMastery = (testId) => {
-    const stats = userStats[testId];
-    if (!stats || stats.totalAnswered === 0) return 0;
-    return Math.round((stats.totalCorrect / stats.totalAnswered) * 100);
+  const resetProgress = async (testId) => {
+    if (!user) return;
+    if (!confirm('Reset all progress for this topic? You\'ll start fresh with all 50 questions.')) return;
+    try {
+      const newMastered = { ...masteredQuestions, [testId]: [] };
+      setMasteredQuestions(newMastered);
+      await db.collection('users').doc(user.uid).set({ mastered: newMastered }, { merge: true });
+    } catch (e) {
+      console.error('Error resetting progress:', e);
+    }
   };
 
-  // Calculate overall progress
-  const getOverallProgress = () => {
-    const testsWithAttempts = tests.filter(t => userStats[t.id]?.attempts > 0).length;
-    return Math.round((testsWithAttempts / tests.length) * 100);
-  };
+  const getMasteredCount = (testId) => (masteredQuestions[testId] || []).length;
+  const getTotalQuestions = (testId) => allQuestions[testId].length;
+  const getMasteryPercent = (testId) => Math.round((getMasteredCount(testId) / getTotalQuestions(testId)) * 100);
 
   if (authLoading) {
     return (
@@ -309,12 +325,10 @@ function App() {
         <span style={{ fontSize: 64, marginBottom: 16 }}>👶</span>
         <h1 style={{ fontSize: 28, fontWeight: 800, color: '#4A3F55', marginBottom: 8 }}>New Parent Quiz</h1>
         <p style={{ fontSize: 16, color: '#8B7E9B', marginBottom: 32, textAlign: 'center' }}>Test your parenting knowledge<br/>and track your progress</p>
-        
         <button onClick={signInWithGoogle} style={{
           display: 'flex', alignItems: 'center', gap: 12, padding: '16px 32px',
           background: '#fff', border: '2px solid #E0D6E9', borderRadius: 16,
-          fontSize: 16, fontWeight: 600, color: '#4A3F55', cursor: 'pointer',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
+          fontSize: 16, fontWeight: 600, color: '#4A3F55', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
         }}>
           <svg width="20" height="20" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -324,51 +338,31 @@ function App() {
           </svg>
           Sign in with Google
         </button>
-        
-        <p style={{ marginTop: 24, fontSize: 13, color: '#B8A9C9', textAlign: 'center' }}>
-          Sign in to save your progress<br/>across devices
-        </p>
+        <p style={{ marginTop: 24, fontSize: 13, color: '#B8A9C9', textAlign: 'center' }}>Sign in to save your progress<br/>across devices</p>
       </div>
     );
   }
 
-  // Due Date Input Modal
   if (showDueDateInput) {
     return (
       <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #FFF5F5 0%, #FFF0F7 50%, #F5F0FF 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
         <span style={{ fontSize: 48, marginBottom: 16 }}>📅</span>
         <h2 style={{ fontSize: 22, fontWeight: 700, color: '#4A3F55', marginBottom: 8 }}>When is baby due?</h2>
         <p style={{ fontSize: 14, color: '#8B7E9B', marginBottom: 24, textAlign: 'center' }}>We'll show you a countdown and track your pregnancy week</p>
-        
-        <input
-          type="date"
-          value={dueDateInput}
-          onChange={(e) => setDueDateInput(e.target.value)}
-          style={{
-            padding: '16px 20px', fontSize: 18, borderRadius: 12, border: '2px solid #E0D6E9',
-            marginBottom: 16, width: '100%', maxWidth: 280, textAlign: 'center'
-          }}
-        />
-        
+        <input type="date" value={dueDateInput} onChange={(e) => setDueDateInput(e.target.value)}
+          style={{ padding: '16px 20px', fontSize: 18, borderRadius: 12, border: '2px solid #E0D6E9', marginBottom: 16, width: '100%', maxWidth: 280, textAlign: 'center' }} />
         <div style={{ display: 'flex', gap: 12, width: '100%', maxWidth: 280 }}>
-          <button onClick={() => setShowDueDateInput(false)} style={{
-            flex: 1, padding: '14px', background: 'transparent', border: '2px solid #E0D6E9',
-            borderRadius: 12, color: '#8B7E9B', fontSize: 15, fontWeight: 600, cursor: 'pointer'
-          }}>Skip</button>
-          <button onClick={saveDueDate} disabled={!dueDateInput} style={{
-            flex: 1, padding: '14px', background: dueDateInput ? 'linear-gradient(135deg, #9B59B6, #B57EDC)' : '#E0D6E9',
-            border: 'none', borderRadius: 12, color: '#fff', fontSize: 15, fontWeight: 600, cursor: dueDateInput ? 'pointer' : 'default'
-          }}>Save</button>
+          <button onClick={() => setShowDueDateInput(false)} style={{ flex: 1, padding: '14px', background: 'transparent', border: '2px solid #E0D6E9', borderRadius: 12, color: '#8B7E9B', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>Skip</button>
+          <button onClick={saveDueDate} disabled={!dueDateInput} style={{ flex: 1, padding: '14px', background: dueDateInput ? 'linear-gradient(135deg, #9B59B6, #B57EDC)' : '#E0D6E9', border: 'none', borderRadius: 12, color: '#fff', fontSize: 15, fontWeight: 600, cursor: dueDateInput ? 'pointer' : 'default' }}>Save</button>
         </div>
       </div>
     );
   }
 
   if (screen === 'select') {
-    const overallProgress = getOverallProgress();
-    const totalCorrect = userStats.totalCorrect || 0;
-    const totalAnswered = userStats.totalAnswered || 0;
-    const overallAccuracy = totalAnswered > 0 ? Math.round((totalCorrect / totalAnswered) * 100) : 0;
+    const totalMastered = tests.reduce((sum, t) => sum + getMasteredCount(t.id), 0);
+    const totalQuestions = tests.reduce((sum, t) => sum + getTotalQuestions(t.id), 0);
+    const overallMastery = Math.round((totalMastered / totalQuestions) * 100);
     
     return (
       <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #FFF5F5 0%, #FFF0F7 50%, #F5F0FF 100%)' }}>
@@ -381,7 +375,6 @@ function App() {
         </div>
         
         <div style={{ padding: '16px 20px' }}>
-          {/* Due Date Section */}
           {dueDate ? (
             <DueDateCountdown dueDate={dueDate} onEdit={() => { setDueDateInput(dueDate); setShowDueDateInput(true); }} />
           ) : (
@@ -399,74 +392,81 @@ function App() {
           <div style={{ background: '#fff', borderRadius: 16, padding: 16, marginBottom: 16, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <h3 style={{ fontSize: 14, fontWeight: 600, color: '#8B7E9B', marginBottom: 4 }}>Your Progress</h3>
+                <h3 style={{ fontSize: 14, fontWeight: 600, color: '#8B7E9B', marginBottom: 4 }}>Questions Mastered</h3>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-                  <span style={{ fontSize: 28, fontWeight: 800, color: '#4A3F55' }}>{overallAccuracy}%</span>
-                  <span style={{ fontSize: 13, color: '#B8A9C9' }}>accuracy</span>
+                  <span style={{ fontSize: 28, fontWeight: 800, color: '#4A3F55' }}>{totalMastered}</span>
+                  <span style={{ fontSize: 16, color: '#B8A9C9' }}>/ {totalQuestions}</span>
                 </div>
-                <p style={{ fontSize: 12, color: '#B8A9C9', marginTop: 4 }}>
-                  {totalCorrect}/{totalAnswered} correct • {userStats.totalQuizzes || 0} quizzes
-                </p>
+                <p style={{ fontSize: 12, color: '#7BC67B', marginTop: 4, fontWeight: 600 }}>{overallMastery}% complete</p>
               </div>
               <div style={{ position: 'relative', width: 60, height: 60 }}>
-                <ProgressRing progress={overallProgress} size={60} strokeWidth={5} color="#7BC67B" />
-                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(0deg)', fontSize: 14, fontWeight: 700, color: '#4A3F55' }}>
-                  {tests.filter(t => userStats[t.id]?.attempts > 0).length}/{tests.length}
-                </div>
+                <ProgressRing progress={overallMastery} size={60} strokeWidth={5} color="#7BC67B" />
+                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(0deg)', fontSize: 18 }}>🎯</div>
               </div>
             </div>
           </div>
           
-          {/* Tests List */}
           <h2 style={{ fontSize: 16, fontWeight: 700, color: '#4A3F55', marginBottom: 12 }}>Topics</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {tests.map((test) => {
-              const stats = userStats[test.id];
-              const mastery = getMastery(test.id);
-              const hasAttempted = stats?.attempts > 0;
+              const mastered = getMasteredCount(test.id);
+              const total = getTotalQuestions(test.id);
+              const percent = getMasteryPercent(test.id);
+              const remaining = total - mastered;
+              const isComplete = mastered === total;
               
               return (
-                <button key={test.id} onClick={() => startTest(test)} style={{
-                  background: '#fff', borderRadius: 14, padding: '14px', border: 'none',
-                  cursor: 'pointer', textAlign: 'left', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', width: '100%',
-                  display: 'flex', alignItems: 'center', gap: 12
-                }}>
-                  {/* Progress Ring with Icon */}
-                  <div style={{ position: 'relative', width: 48, height: 48, flexShrink: 0 }}>
-                    <ProgressRing progress={mastery} size={48} strokeWidth={4} color={test.color} />
-                    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(0deg)', fontSize: 20 }}>
-                      {test.icon}
-                    </div>
-                  </div>
-                  
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <h3 style={{ fontSize: 15, fontWeight: 700, color: '#4A3F55', margin: 0 }}>{test.title}</h3>
-                      {hasAttempted && (
-                        <span style={{ fontSize: 11, fontWeight: 600, color: test.color, background: `${test.color}20`, padding: '2px 6px', borderRadius: 6 }}>
-                          {mastery}%
-                        </span>
-                      )}
-                    </div>
-                    <p style={{ fontSize: 12, color: '#8B7E9B', margin: '2px 0 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {test.description}
-                    </p>
-                    {hasAttempted && (
-                      <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-                        <span style={{ fontSize: 11, color: '#7BC67B' }}>Best: {stats.bestScore}%</span>
-                        <span style={{ fontSize: 11, color: '#B8A9C9' }}>•</span>
-                        <span style={{ fontSize: 11, color: '#B8A9C9' }}>{stats.attempts} attempt{stats.attempts !== 1 ? 's' : ''}</span>
+                <div key={test.id} style={{ background: '#fff', borderRadius: 14, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
+                  <button onClick={() => startTest(test)} style={{
+                    width: '100%', padding: '14px', border: 'none', background: 'transparent',
+                    cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12
+                  }}>
+                    <div style={{ position: 'relative', width: 48, height: 48, flexShrink: 0 }}>
+                      <ProgressRing progress={percent} size={48} strokeWidth={4} color={test.color} />
+                      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(0deg)', fontSize: 20 }}>
+                        {isComplete ? '✓' : test.icon}
                       </div>
-                    )}
-                  </div>
+                    </div>
+                    
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <h3 style={{ fontSize: 15, fontWeight: 700, color: '#4A3F55', margin: 0 }}>{test.title}</h3>
+                      </div>
+                      <p style={{ fontSize: 12, color: '#8B7E9B', margin: '2px 0 0' }}>{test.description}</p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: test.color }}>{mastered}/{total}</span>
+                        <span style={{ fontSize: 12, color: '#B8A9C9' }}>mastered</span>
+                        {remaining > 0 && (
+                          <>
+                            <span style={{ fontSize: 12, color: '#B8A9C9' }}>•</span>
+                            <span style={{ fontSize: 12, color: '#8B7E9B' }}>{remaining} to go</span>
+                          </>
+                        )}
+                        {isComplete && (
+                          <span style={{ fontSize: 11, fontWeight: 600, color: '#fff', background: '#7BC67B', padding: '2px 8px', borderRadius: 8, marginLeft: 4 }}>Complete!</span>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <span style={{ fontSize: 16, color: '#C9A0DC' }}>→</span>
+                  </button>
                   
-                  <span style={{ fontSize: 16, color: '#C9A0DC' }}>→</span>
-                </button>
+                  {mastered > 0 && (
+                    <div style={{ borderTop: '1px solid #F5F0FF', padding: '8px 14px', display: 'flex', gap: 12 }}>
+                      <button onClick={() => startTest(test, true)} style={{ background: 'none', border: 'none', fontSize: 12, color: '#B8A9C9', cursor: 'pointer' }}>
+                        Practice all {total}
+                      </button>
+                      <button onClick={() => resetProgress(test.id)} style={{ background: 'none', border: 'none', fontSize: 12, color: '#E57373', cursor: 'pointer' }}>
+                        Reset progress
+                      </button>
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>
           
-          <p style={{ textAlign: 'center', padding: '16px', fontSize: 12, color: '#B8A9C9' }}>250 questions across 5 topics</p>
+          <p style={{ textAlign: 'center', padding: '16px', fontSize: 12, color: '#B8A9C9' }}>Master all 250 questions!</p>
         </div>
       </div>
     );
@@ -474,6 +474,9 @@ function App() {
 
   if (screen === 'quiz') {
     const q = questions[currentQ];
+    const mastered = getMasteredCount(selectedTest.id);
+    const total = getTotalQuestions(selectedTest.id);
+    
     return (
       <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #FFF5F5 0%, #FFF0F7 50%, #F5F0FF 100%)', display: 'flex', flexDirection: 'column' }}>
         <div style={{ background: `linear-gradient(135deg, ${selectedTest.color}, ${selectedTest.color}CC)`, padding: '12px 16px 14px', borderRadius: '0 0 20px 20px' }}>
@@ -484,6 +487,9 @@ function App() {
             </div>
             <span style={{ color: '#fff', fontSize: 14, fontWeight: 600, flexShrink: 0 }}>{currentQ + 1}/{questions.length}</span>
             <span style={{ background: 'rgba(255,255,255,0.9)', color: '#4A3F55', padding: '5px 12px', borderRadius: 12, fontSize: 13, fontWeight: 700, flexShrink: 0 }}>{score}✓</span>
+          </div>
+          <div style={{ marginTop: 8, fontSize: 12, color: 'rgba(255,255,255,0.8)', textAlign: 'center' }}>
+            {mastered + sessionMastered.length}/{total} mastered
           </div>
         </div>
         <div style={{ flex: 1, padding: '20px 18px 20px', display: 'flex', flexDirection: 'column' }}>
@@ -497,8 +503,7 @@ function App() {
               return (
                 <button key={idx} onClick={() => handleAnswer(idx)} disabled={showResult} style={{
                   display: 'flex', alignItems: 'center', gap: 12, padding: '14px', background: bg,
-                  border: `2px solid ${border}`, borderRadius: 14, cursor: showResult ? 'default' : 'pointer',
-                  textAlign: 'left', width: '100%'
+                  border: `2px solid ${border}`, borderRadius: 14, cursor: showResult ? 'default' : 'pointer', textAlign: 'left', width: '100%'
                 }}>
                   <span style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg, #FFE4EC, #F5E6FF)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#B57EDC', fontSize: 13, flexShrink: 0 }}>
                     {String.fromCharCode(65 + idx)}
@@ -536,30 +541,62 @@ function App() {
     const grade = pct >= 90 ? 'A' : pct >= 80 ? 'B' : pct >= 70 ? 'C' : pct >= 60 ? 'D' : 'F';
     const emoji = pct >= 90 ? '🌟' : pct >= 80 ? '👏' : pct >= 70 ? '📚' : pct >= 60 ? '💪' : '🌱';
     const msg = pct >= 90 ? "Outstanding!" : pct >= 80 ? "Great job!" : pct >= 70 ? "Good work!" : pct >= 60 ? "Keep learning!" : "Keep studying!";
-    const prevBest = userStats[selectedTest.id]?.bestScore || 0;
-    const isNewBest = pct > prevBest;
-    const mastery = getMastery(selectedTest.id);
+    const mastered = getMasteredCount(selectedTest.id);
+    const total = getTotalQuestions(selectedTest.id);
+    const remaining = total - mastered;
+    const isComplete = remaining === 0;
     
     return (
       <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #FFF5F5 0%, #FFF0F7 50%, #F5F0FF 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, textAlign: 'center' }}>
-        <span style={{ fontSize: 64, marginBottom: 16 }}>{emoji}</span>
+        <span style={{ fontSize: 64, marginBottom: 16 }}>{isComplete ? '🏆' : emoji}</span>
         <h1 style={{ fontSize: 24, fontWeight: 800, color: '#4A3F55', margin: '0 0 4px' }}>{selectedTest.title}</h1>
-        <p style={{ fontSize: 16, color: '#8B7E9B', margin: '0 0 20px' }}>Quiz Complete!</p>
-        {isNewBest && <p style={{ fontSize: 14, color: '#F7B731', fontWeight: 700, margin: '-12px 0 12px' }}>🏆 New Best Score!</p>}
+        <p style={{ fontSize: 16, color: '#8B7E9B', margin: '0 0 20px' }}>
+          {isComplete ? 'Topic Complete!' : 'Quiz Complete!'}
+        </p>
+        
         <div style={{ width: 100, height: 100, borderRadius: '50%', background: `linear-gradient(135deg, ${selectedTest.color}, ${selectedTest.color}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20, boxShadow: '0 8px 32px rgba(0,0,0,0.15)' }}>
           <span style={{ fontSize: 48, fontWeight: 800, color: '#fff' }}>{grade}</span>
         </div>
+        
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 8 }}>
           <span style={{ fontSize: 48, fontWeight: 800, color: '#4A3F55' }}>{finalScore}</span>
           <span style={{ fontSize: 32, color: '#C9A0DC' }}>/</span>
           <span style={{ fontSize: 32, fontWeight: 600, color: '#8B7E9B' }}>{questions.length}</span>
         </div>
         <p style={{ fontSize: 20, fontWeight: 600, color: '#B57EDC', marginBottom: 8 }}>{pct}%</p>
-        <p style={{ fontSize: 14, color: '#8B7E9B', marginBottom: 24 }}>Overall mastery: {mastery}%</p>
-        <p style={{ fontSize: 18, color: '#6B5B7A', marginBottom: 32 }}>{msg}</p>
+        
+        {/* Mastery Progress */}
+        <div style={{ background: '#fff', borderRadius: 12, padding: 16, marginBottom: 20, width: '100%', maxWidth: 280 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <span style={{ fontSize: 13, color: '#8B7E9B' }}>Topic Mastery</span>
+            <span style={{ fontSize: 15, fontWeight: 700, color: selectedTest.color }}>{mastered}/{total}</span>
+          </div>
+          <div style={{ height: 8, background: '#E8E0F0', borderRadius: 8, overflow: 'hidden' }}>
+            <div style={{ height: '100%', background: selectedTest.color, borderRadius: 8, width: `${(mastered / total) * 100}%`, transition: 'width 0.3s' }} />
+          </div>
+          {sessionMastered.length > 0 && (
+            <p style={{ fontSize: 12, color: '#7BC67B', marginTop: 8 }}>+{sessionMastered.length} newly mastered this session!</p>
+          )}
+        </div>
+        
+        <p style={{ fontSize: 18, color: '#6B5B7A', marginBottom: 24 }}>
+          {isComplete ? '🎉 You\'ve mastered every question!' : `${remaining} question${remaining !== 1 ? 's' : ''} left to master`}
+        </p>
+        
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', maxWidth: 300 }}>
-          <button onClick={() => startTest(selectedTest)} style={{ padding: '18px 48px', background: `linear-gradient(135deg, ${selectedTest.color}, ${selectedTest.color}CC)`, border: 'none', borderRadius: 16, color: '#fff', fontSize: 17, fontWeight: 700, cursor: 'pointer' }}>Try Again</button>
-          <button onClick={backToSelect} style={{ padding: '16px 48px', background: 'transparent', border: '2px solid #E0D6E9', borderRadius: 16, color: '#6B5B7A', fontSize: 16, fontWeight: 600, cursor: 'pointer' }}>Choose Another Test</button>
+          {!isComplete && (
+            <button onClick={() => startTest(selectedTest)} style={{ padding: '18px 48px', background: `linear-gradient(135deg, ${selectedTest.color}, ${selectedTest.color}CC)`, border: 'none', borderRadius: 16, color: '#fff', fontSize: 17, fontWeight: 700, cursor: 'pointer' }}>
+              Continue ({remaining} left)
+            </button>
+          )}
+          {isComplete && (
+            <button onClick={() => startTest(selectedTest, true)} style={{ padding: '18px 48px', background: `linear-gradient(135deg, ${selectedTest.color}, ${selectedTest.color}CC)`, border: 'none', borderRadius: 16, color: '#fff', fontSize: 17, fontWeight: 700, cursor: 'pointer' }}>
+              Practice All 50
+            </button>
+          )}
+          <button onClick={backToSelect} style={{ padding: '16px 48px', background: 'transparent', border: '2px solid #E0D6E9', borderRadius: 16, color: '#6B5B7A', fontSize: 16, fontWeight: 600, cursor: 'pointer' }}>
+            Choose Another Test
+          </button>
         </div>
       </div>
     );
