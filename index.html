@@ -261,6 +261,7 @@ function App() {
     setSelected(null);
     setShowResult(false);
     setSessionMastered([]);
+    window.scrollTo(0, 0);
   };
 
   const handleAnswer = (idx) => {
@@ -280,16 +281,19 @@ function App() {
       setCurrentQ(currentQ + 1);
       setSelected(null);
       setShowResult(false);
+      window.scrollTo(0, 0);
     } else {
       const finalScore = score + (selected === questions[currentQ].correct ? 1 : 0);
       saveQuizResult(selectedTest.id, finalScore, questions.length);
       setScreen('results');
+      window.scrollTo(0, 0);
     }
   };
 
   const backToSelect = () => {
     setScreen('select');
     setSelectedTest(null);
+    window.scrollTo(0, 0);
   };
 
   const resetProgress = async (testId) => {
