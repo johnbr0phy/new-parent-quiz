@@ -155,6 +155,19 @@ function App() {
   const [score, setScore] = React.useState(0);
   const [sessionMastered, setSessionMastered] = React.useState([]);
 
+  // Scroll to top when screen changes or question changes
+  React.useEffect(() => {
+    const scrollToTop = () => {
+      window.scrollTo(0, 0);
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+    };
+    scrollToTop();
+    // Double-check after a short delay in case of render timing issues
+    const timeout = setTimeout(scrollToTop, 50);
+    return () => clearTimeout(timeout);
+  }, [screen, currentQ]);
+
   React.useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       setUser(user);
@@ -283,7 +296,6 @@ function App() {
     setShowResult(false);
     setSessionMastered([]);
     setScreen('quiz');
-    requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'instant' }));
   };
 
   const handleAnswer = (idx) => {
@@ -303,19 +315,16 @@ function App() {
       setCurrentQ(currentQ + 1);
       setSelected(null);
       setShowResult(false);
-      requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'instant' }));
     } else {
       const finalScore = score + (selected === questions[currentQ].correct ? 1 : 0);
       saveQuizResult(selectedTest.id, finalScore, questions.length);
       setScreen('results');
-      requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'instant' }));
     }
   };
 
   const backToSelect = () => {
     setScreen('select');
     setSelectedTest(null);
-    requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'instant' }));
   };
 
   const resetProgress = async (testId) => {
